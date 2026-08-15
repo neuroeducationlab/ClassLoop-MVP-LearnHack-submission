@@ -89,7 +89,6 @@ export default function Dashboard() {
     sendRemediation,
     getSubmissionCount,
     getAverageScore,
-    getFacultyGap,
     getParticipationRate,
   } = useApp()
 
@@ -225,7 +224,6 @@ export default function Dashboard() {
   const stats = [
     { label: 'ส่งแล้ว', value: `${getSubmissionCount()}/${students.length}` },
     { label: 'ความเข้าใจเฉลี่ย', value: `${liveAverage}%` },
-    { label: 'ช่องว่างระหว่างคณะ', value: `${getFacultyGap()} จุด` },
     { label: 'มีส่วนร่วม', value: `${getParticipationRate()}%` },
   ]
 
