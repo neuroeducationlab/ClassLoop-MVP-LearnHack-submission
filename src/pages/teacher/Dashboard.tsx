@@ -246,7 +246,7 @@ export default function Dashboard() {
   /* -------------------------------------------------------------- render -- */
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 pb-12">
+    <div className="mx-auto max-w-7xl space-y-6 pb-12 animate-slide-up">
       {/* page header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

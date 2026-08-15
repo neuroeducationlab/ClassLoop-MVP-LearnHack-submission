@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  Menu,
   MessagesSquare,
   Radio,
   RotateCcw,
@@ -16,6 +17,7 @@ import {
   User,
   Users,
   Wand2,
+  X,
 } from 'lucide-react'
 import RoleSwitcher from '@/components/layout/RoleSwitcher'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
@@ -68,6 +70,7 @@ export default function TeacherShell() {
   useEffect(() => setRole('teacher'), [setRole])
 
   const [openMenu, setOpenMenu] = useState<'bell' | 'account' | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const bellRef = useRef<HTMLDivElement>(null)
   const accountRef = useRef<HTMLDivElement>(null)
 
@@ -167,9 +170,17 @@ export default function TeacherShell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-grey-300/60 bg-paper px-4 md:px-6">
-          <span className="md:hidden">
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="rounded-lg p-1.5 text-grey-600 hover:bg-pink-50 hover:text-pink-600 focus:outline-none cursor-pointer"
+              aria-label="เปิดเมนู"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <Brand />
-          </span>
+          </div>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <button
@@ -272,6 +283,100 @@ export default function TeacherShell() {
           </div>
         </main>
       </div>
+
+      {/* Mobile Drawer Sidebar */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden animate-fade-in">
+          <div
+            className="fixed inset-0 bg-ink/40 backdrop-blur-xs transition-opacity"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className="relative flex w-64 max-w-xs flex-col bg-paper h-full shadow-2xl p-4 animate-slide-in-left">
+            <div className="flex items-center justify-between pb-4 border-b border-grey-300/40">
+              <Brand />
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-full bg-canvas p-1.5 text-grey-600 hover:text-ink cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* courses */}
+            <div className="px-1 pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-grey-600">
+                รายวิชา
+              </p>
+              <div className="mt-2 flex flex-col gap-1">
+                <Link
+                  to="/teacher"
+                  onClick={() => setSidebarOpen(false)}
+                  className="rounded-lg bg-pink-50 px-3 py-2 ring-1 ring-pink-300/50 transition-colors hover:bg-pink-50/70"
+                >
+                  <p className="truncate text-sm font-medium text-pink-600">{course.name}</p>
+                  <p className="mt-0.5 text-[11px] text-grey-600">{course.code}</p>
+                </Link>
+                {LOCKED_COURSES.map((name) => (
+                  <div
+                    key={name}
+                    aria-disabled="true"
+                    className="cursor-not-allowed select-none rounded-lg px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <p className="min-w-0 flex-1 truncate text-sm text-grey-300">{name}</p>
+                      <ComingSoonBadge />
+                      <Lock className="h-3.5 w-3.5 shrink-0 text-grey-300" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* navigation */}
+            <nav className="mt-4 flex flex-1 flex-col gap-1 border-t border-grey-300/40 pt-4">
+              {NAV.map(({ to, label, icon: Icon, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={() => setSidebarOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-pink-50 text-pink-600'
+                        : 'text-grey-600 hover:bg-pink-50/60 hover:text-pink-600',
+                    )
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
+              <div
+                aria-disabled="true"
+                className="flex cursor-not-allowed select-none items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-grey-300"
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                <span className="min-w-0 flex-1">เช็คชื่อ</span>
+                <ComingSoonBadge />
+                <Lock className="h-3.5 w-3.5 shrink-0" />
+              </div>
+            </nav>
+
+            {/* SPU E-learning info */}
+            <div className="mt-auto pt-4 border-t border-grey-300/40">
+              <div className="rounded-xl border border-grey-300/50 bg-canvas px-3 py-2.5">
+                <div className="flex items-center gap-2 text-xs text-grey-600">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-pink-600" />
+                  <span>เชื่อมต่อกับ SPU e-Learning</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   )
 }
