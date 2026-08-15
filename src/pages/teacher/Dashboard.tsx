@@ -27,6 +27,7 @@ import {
   X,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
+import { useReveal } from '@/hooks/useReveal'
 import { WEEKLY_SCORES, type ActivityFormat } from '@/data/seed-data'
 import { cn } from '@/lib/utils'
 
@@ -81,6 +82,7 @@ const GAME_SLOT: Record<ActivityFormat, string> = {
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const revealRef = useReveal(true)
   const {
     course,
     students,
@@ -246,7 +248,7 @@ export default function Dashboard() {
   /* -------------------------------------------------------------- render -- */
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 pb-12 animate-slide-up">
+    <div ref={revealRef} className="mx-auto max-w-7xl space-y-6 pb-12 animate-slide-up">
       {/* page header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -275,7 +277,7 @@ export default function Dashboard() {
       </div>
 
       {/* stat cards — big numbers for readability */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="reveal grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map(({ label, value }) => (
           <div key={label} className="rounded-2xl border border-pink-100 bg-pink-50 p-5">
             <p className="text-[15px] font-medium text-ink">{label}</p>
@@ -285,7 +287,7 @@ export default function Dashboard() {
       </div>
 
       {/* ============ HERO — weekly understanding, the main display ============ */}
-      <div className="rounded-2xl border border-grey-300/50 border-l-[3px] border-l-pink-600 bg-paper p-6 shadow-sm">
+      <div className="reveal rounded-2xl border border-grey-300/50 border-l-[3px] border-l-pink-600 bg-paper p-6 shadow-sm">
         <h2 className="text-lg font-bold text-ink">ความเข้าใจรายหัวข้อ (รายสัปดาห์)</h2>
 
         <div className="mt-4 h-[320px]">
@@ -407,7 +409,7 @@ export default function Dashboard() {
       </div>
 
       {/* faculty averages (vertical bars) + development */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="reveal grid gap-6 lg:grid-cols-3">
         <div className="rounded-2xl border border-grey-300/50 bg-paper p-5 lg:col-span-2">
           <h2 className="flex items-center gap-2 text-lg font-bold text-ink">
             <Search className="h-5 w-5 text-pink-600" />
@@ -481,7 +483,7 @@ export default function Dashboard() {
       </div>
 
       {/* pending + game ideas */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="reveal grid gap-6 lg:grid-cols-3">
         <div className="rounded-2xl border border-grey-300/50 bg-paper p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-ink">ใครยังไม่ส่ง</h2>

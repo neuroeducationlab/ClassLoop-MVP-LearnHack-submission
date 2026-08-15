@@ -29,33 +29,43 @@
     --chart-4: 250 3% 43%;
     --chart-5: 240 4% 84%;
     --radius: 0.5rem;
+
+    /* light semantic tokens */
+    --color-canvas: #FAFAFA;
+    --color-paper: #FFFFFF;
+    --color-ink: #17161A;
   }
 
   .dark {
     --background: 255 8% 9%;
     --foreground: 0 0% 98%;
-    --card: 255 8% 9%;
+    --card: 255 6% 13%;
     --card-foreground: 0 0% 98%;
-    --popover: 255 8% 9%;
+    --popover: 255 6% 13%;
     --popover-foreground: 0 0% 98%;
     --primary: 331 83% 62%;
     --primary-foreground: 255 8% 9%;
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 240 3.7% 18%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --accent: 240 3.7% 18%;
     --accent-foreground: 331 84% 78%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 240 3.7% 22%;
+    --input: 240 3.7% 22%;
     --ring: 331 83% 62%;
     --chart-1: 331 83% 62%;
     --chart-2: 331 84% 78%;
     --chart-3: 330 64% 50%;
     --chart-4: 240 5% 64.9%;
     --chart-5: 240 3.7% 15.9%;
+
+    /* dark semantic tokens */
+    --color-canvas: #111014;
+    --color-paper: #1A1920;
+    --color-ink: #F0F0F2;
   }
 }
 
@@ -64,29 +74,83 @@
     @apply border-border;
     font-family: 'Noto Sans Thai', 'Inter', sans-serif;
   }
-  body, button, input, select, textarea, text, svg text, .recharts-text, .recharts-cartesian-axis-tick-value {
-    @apply bg-canvas text-foreground antialiased;
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    @apply antialiased;
     font-family: 'Noto Sans Thai', 'Inter', sans-serif !important;
   }
+
+  button, input, select, textarea {
+    font-family: 'Noto Sans Thai', 'Inter', sans-serif !important;
+  }
+
+  /* override the Tailwind canvas/paper/ink arbitrary values to follow dark mode */
+  .bg-canvas { background-color: var(--color-canvas) !important; }
+  .bg-paper  { background-color: var(--color-paper)  !important; }
+  .text-ink  { color: var(--color-ink) !important; }
 }
 
-/* Route Fade Transition */
+/* =====================================================================
+   PAGE TRANSITION — fast, subtle slide-up fade
+   ===================================================================== */
 @keyframes pageFade {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-page-fade {
-  animation: pageFade 200ms ease-in-out forwards;
+  animation: pageFade 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* 3D Flashcard Flip Utilities */
+/* =====================================================================
+   SCROLL REVEAL — cards / text glide in from below
+   ===================================================================== */
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Individual reveal (applied by JS IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger siblings */
+.reveal:nth-child(2) { transition-delay: 80ms; }
+.reveal:nth-child(3) { transition-delay: 160ms; }
+.reveal:nth-child(4) { transition-delay: 240ms; }
+.reveal:nth-child(5) { transition-delay: 320ms; }
+.reveal:nth-child(6) { transition-delay: 400ms; }
+
+/* =====================================================================
+   MOBILE SIDEBAR SLIDE-IN
+   ===================================================================== */
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =====================================================================
+   3-D FLASHCARD FLIP
+   ===================================================================== */
 .perspective-1000 {
   perspective: 1000px;
 }
@@ -104,63 +168,64 @@
   transform: rotateY(180deg);
 }
 
-/* Playful Game-like Animations for Student View */
+/* =====================================================================
+   GAME / STUDENT PLAYFUL
+   ===================================================================== */
 @keyframes bounce-subtle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50%       { transform: translateY(-6px); }
 }
 
 @keyframes confetti-burst {
-  0% { transform: scale(0.3) translateY(0); opacity: 1; }
-  50% { transform: scale(1.3) translateY(-40px); opacity: 1; }
+  0%   { transform: scale(0.3) translateY(0); opacity: 1; }
+  50%  { transform: scale(1.3) translateY(-40px); opacity: 1; }
   100% { transform: scale(1.1) translateY(-70px); opacity: 0; }
 }
 
 @keyframes pop-in {
-  0% { transform: scale(0.6); opacity: 0; }
-  70% { transform: scale(1.08); }
+  0%   { transform: scale(0.6); opacity: 0; }
+  70%  { transform: scale(1.08); }
   100% { transform: scale(1); opacity: 1; }
 }
 
-.animate-confetti {
-  animation: confetti-burst 1.2s ease-out forwards;
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
 }
 
-.animate-pop {
-  animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.animate-confetti      { animation: confetti-burst 1.2s ease-out forwards; }
+.animate-pop           { animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-bounce-subtle { animation: bounce-subtle 1.8s infinite ease-in-out; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
 }
 
-.animate-bounce-subtle {
-  animation: bounce-subtle 1.8s infinite ease-in-out;
-}
-
-/* Scroll / Enter animations */
-@keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.animate-slide-in-left {
-  animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-
+/* =====================================================================
+   DARK MODE OVERRIDES for coloured utility classes used throughout
+   ===================================================================== */
+.dark .border-grey-300\/60 { border-color: rgb(255 255 255 / 0.08) !important; }
+.dark .border-grey-300\/50 { border-color: rgb(255 255 255 / 0.07) !important; }
+.dark .border-grey-300\/40 { border-color: rgb(255 255 255 / 0.06) !important; }
+.dark .bg-grey-100         { background-color: hsl(255 6% 18%) !important; }
+.dark .bg-canvas           { background-color: var(--color-canvas) !important; }
+.dark .bg-paper            { background-color: var(--color-paper) !important; }
+.dark .text-grey-600       { color: #9FA0A5 !important; }
+.dark .text-grey-300       { color: #525156 !important; }
+.dark .bg-pink-50          { background-color: hsl(330 40% 12%) !important; }
+.dark .bg-pink-50\/70      { background-color: hsl(330 40% 12% / 0.7) !important; }
+.dark .bg-pink-50\/60      { background-color: hsl(330 40% 12% / 0.6) !important; }
+.dark .border-pink-100     { border-color: hsl(330 40% 20%) !important; }
+.dark .bg-amber-50         { background-color: hsl(40 35% 12%) !important; }
+.dark .bg-amber-50\/70     { background-color: hsl(40 35% 12% / 0.7) !important; }
+.dark .border-amber-200    { border-color: hsl(40 50% 25%) !important; }
+.dark .bg-emerald-50       { background-color: hsl(152 30% 10%) !important; }
+.dark .border-emerald-200  { border-color: hsl(152 40% 20%) !important; }
+.dark .bg-rose-50\/70      { background-color: hsl(350 35% 12% / 0.7) !important; }
+.dark .border-rose-200     { border-color: hsl(350 45% 22%) !important; }
+.dark .bg-blue-50\/70      { background-color: hsl(220 35% 12% / 0.7) !important; }
+.dark .border-blue-200     { border-color: hsl(220 45% 22%) !important; }
+.dark .bg-white            { background-color: hsl(255 6% 16%) !important; }
+.dark .shadow-sm           { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4) !important; }
+.dark .shadow-md           { box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.5) !important; }

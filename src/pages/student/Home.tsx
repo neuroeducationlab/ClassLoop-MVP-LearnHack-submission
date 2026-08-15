@@ -22,11 +22,13 @@ import {
   Zap,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
+import { useReveal } from '@/hooks/useReveal'
 import { cn } from '@/lib/utils'
 
 export default function Home() {
   const navigate = useNavigate()
   const { currentStudent } = useApp()
+  const revealRef = useReveal(true)
 
   // Top 5 Leaderboard Data sorted by XP/spokeCount
   const leaderboardData = [
@@ -47,9 +49,9 @@ export default function Home() {
   ]
 
   return (
-    <div className="mx-auto w-full max-w-[390px] space-y-5 pb-12">
+    <div ref={revealRef} className="mx-auto w-full max-w-[390px] space-y-5 pb-12">
       {/* Player Welcome Status Card */}
-      <div className="rounded-3xl border-2 border-pink-300/80 bg-paper p-5 shadow-xs space-y-3">
+      <div className="reveal rounded-3xl border-2 border-pink-300/80 bg-paper p-5 shadow-xs space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-600 font-black text-lg text-white shadow-md shadow-pink-600/20">
@@ -82,7 +84,7 @@ export default function Home() {
       </div>
 
       {/* 🎮 GAME & INTERACTIVE ACTIVITY LAUNCHER CARD */}
-      <div className="rounded-3xl border-2 border-pink-500/80 bg-paper p-5 shadow-md space-y-4 relative overflow-hidden">
+      <div className="reveal rounded-3xl border-2 border-pink-500/80 bg-paper p-5 shadow-md space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between">
           <span className="rounded-full bg-pink-600 px-3 py-1 text-xs font-bold text-white shadow-2xs flex items-center gap-1.5">
             <Gamepad2 className="h-3.5 w-3.5" />
@@ -114,7 +116,7 @@ export default function Home() {
       </div>
 
       {/* 🏆 LEADERBOARD CARD (อันดับผู้นำคลาสเรียน) */}
-      <div className="rounded-3xl border-2 border-amber-300 bg-paper p-5 shadow-md space-y-4">
+      <div className="reveal rounded-3xl border-2 border-amber-300 bg-paper p-5 shadow-md space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-600 font-bold">
@@ -183,7 +185,7 @@ export default function Home() {
       </div>
 
       {/* 📈 PROGRESS GROWTH COMPARISON GRAPH (กราฟพัฒนาการเปรียบเทียบก่อนเรียน-หลังเรียน) */}
-      <div className="rounded-3xl border-2 border-emerald-300/80 bg-paper p-5 shadow-md space-y-4">
+      <div className="reveal rounded-3xl border-2 border-emerald-300/80 bg-paper p-5 shadow-md space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 font-bold">
@@ -248,7 +250,7 @@ export default function Home() {
       </div>
 
       {/* 💡 PERSONALIZED LEARNING SUGGESTIONS & EXTRA CHANNELS (ล่างสุด) */}
-      <div className="rounded-3xl border-2 border-pink-400 bg-paper p-5 shadow-md space-y-3">
+      <div className="reveal rounded-3xl border-2 border-pink-400 bg-paper p-5 shadow-md space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-pink-100 text-pink-600 font-bold">

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import RoleSwitcher from '@/components/layout/RoleSwitcher'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
+import DarkModeToggle from '@/components/layout/DarkModeToggle'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
@@ -192,6 +193,7 @@ export default function TeacherShell() {
               Reset demo data
             </button>
 
+            <DarkModeToggle />
             <RoleSwitcher />
             <LanguageSwitcher />
 

@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { BookOpen, Brain, FileCheck, MessagesSquare, User } from 'lucide-react'
 import RoleSwitcher from '@/components/layout/RoleSwitcher'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
+import DarkModeToggle from '@/components/layout/DarkModeToggle'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ export default function StudentShell() {
             <span className="font-bold text-pink-600">ClassLoop</span>
           </span>
           <div className="flex items-center gap-1.5">
+            <DarkModeToggle />
             <LanguageSwitcher />
             <RoleSwitcher />
           </div>
