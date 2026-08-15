@@ -18,9 +18,12 @@ import {
   CheckCircle2,
   Clock,
   FileDown,
+  Flame,
   Search,
   Send,
   Sparkles,
+  Star,
+  Trophy,
   X,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
@@ -602,33 +605,98 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-grey-300/50 bg-paper p-5">
-          <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-pink-600" />
-            <span>แก้คาบน่าเบื่อด้วยกิจกรรม Active Learning</span>
-          </h2>
-          <p className="mt-0.5 text-sm text-grey-600">แทรกช่วงไหนของคาบได้บ้าง</p>
-          <div className="mt-3 space-y-2">
-            {generatedContent.activities.map((a) => (
-              <div key={a.name} className="rounded-xl border border-grey-300/40 px-3 py-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink">
-                    {a.name}
-                  </p>
-                  <span className="shrink-0 rounded-full bg-pink-50 px-2.5 py-0.5 text-xs font-semibold text-pink-600">
-                    {GAME_SLOT[a.format]} · {a.durationMin} นาที
-                  </span>
+        <div className="space-y-6">
+          {/* Mini Leaderboard Card for Teacher */}
+          <div className="rounded-2xl border border-amber-300/80 bg-paper p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-amber-500 fill-amber-400" />
+                <span>มินิลีดเดอร์บอร์ด (นักศึกษาขยันสูงสุด)</span>
+              </h2>
+              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
+                Top 5
+              </span>
+            </div>
+            <p className="text-xs text-grey-600">
+              อัปเดตเรียลไทม์จากคะแนน XP และการตอบคำถามในคาบสด
+            </p>
+
+            <div className="space-y-2 pt-1">
+              {[
+                { rank: 1, name: 'ณัฐ', nickname: 'นัท', faculty: 'ดิจิทัลมีเดีย', xp: 240, streak: 5 },
+                { rank: 2, name: 'วรรณา', nickname: 'นุ้ย', faculty: 'การบัญชี', xp: 210, streak: 4 },
+                { rank: 3, name: 'ธีรวัฒน์', nickname: 'ต้น', faculty: 'วิศวกรรมศาสตร์', xp: 190, streak: 3 },
+                { rank: 4, name: 'พรรณี', nickname: 'พลอย', faculty: 'บริหารธุรกิจ', xp: 160, streak: 3 },
+                { rank: 5, name: 'สมชาย', nickname: 'แมน', faculty: 'นิเทศศาสตร์', xp: 140, streak: 2 },
+              ].map((st) => (
+                <div
+                  key={st.rank}
+                  className="flex items-center justify-between rounded-xl border border-grey-300/40 bg-canvas p-2.5 text-xs"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={cn(
+                        'flex h-6 w-6 items-center justify-center rounded-full font-bold text-xs shrink-0',
+                        st.rank === 1 && 'bg-amber-100 text-amber-800 border border-amber-300',
+                        st.rank === 2 && 'bg-slate-200 text-slate-700 border border-slate-300',
+                        st.rank === 3 && 'bg-amber-800/10 text-amber-900 border border-amber-700/20',
+                        st.rank > 3 && 'bg-paper text-grey-600 border border-grey-300/40'
+                      )}
+                    >
+                      {st.rank}
+                    </span>
+                    <div>
+                      <p className="font-bold text-ink">
+                        {st.name} <span className="text-pink-600">({st.nickname})</span>
+                      </p>
+                      <span className="text-[10px] text-grey-600">{st.faculty}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-md border border-orange-200">
+                      <Flame className="h-3 w-3 fill-orange-400" />
+                      {st.streak} วัน
+                    </span>
+                    <span className="flex items-center gap-1 font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                      <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                      {st.xp} XP
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate('/teacher/studio')}
-            className="mt-3 w-full rounded-xl border border-pink-300 px-3 py-2.5 text-sm font-semibold text-pink-600 transition-colors hover:bg-pink-50"
-          >
-            ดูสคริปต์เกมเต็มในสตูดิโอ →
-          </button>
+
+          {/* Active Learning Activities Idea */}
+          <div className="rounded-2xl border border-grey-300/50 bg-paper p-5">
+            <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-pink-600" />
+              <span>แก้คาบน่าเบื่อด้วยกิจกรรม Active Learning</span>
+            </h2>
+            <p className="mt-0.5 text-sm text-grey-600">แทรกช่วงไหนของคาบได้บ้าง</p>
+            <div className="mt-3 space-y-2">
+              {generatedContent.activities.map((a) => (
+                <div key={a.name} className="rounded-xl border border-grey-300/40 px-3 py-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink">
+                      {a.name}
+                    </p>
+                    <span className="shrink-0 rounded-full bg-pink-50 px-2.5 py-0.5 text-xs font-semibold text-pink-600">
+                      {GAME_SLOT[a.format]} · {a.durationMin} นาที
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/teacher/studio')}
+              className="mt-3 w-full rounded-xl border border-pink-300 px-3 py-2.5 text-sm font-semibold text-pink-600 transition-colors hover:bg-pink-50 cursor-pointer"
+            >
+              ดูสคริปต์เกมเต็มในสตูดิโอ →
+            </button>
+          </div>
         </div>
       </div>
 

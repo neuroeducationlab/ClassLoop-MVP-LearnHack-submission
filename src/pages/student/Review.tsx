@@ -5,14 +5,17 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   FileText,
   Layers,
+  Lightbulb,
   Lock,
   Pin,
   RotateCw,
   Sparkles,
   Star,
   Trophy,
+  Tv,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
@@ -212,6 +215,48 @@ export default function Review() {
           <p className="text-[11px] text-grey-600 leading-relaxed">
             {currentTopic.learningObjective}
           </p>
+        </div>
+
+        {/* 💡 PERSONALIZED EXTRA STUDY SUGGESTIONS (YouTube / Books) */}
+        <div className="rounded-2xl border border-pink-300 bg-pink-50/70 p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-pink-700">
+              <Lightbulb className="h-4 w-4 text-pink-600" />
+              <span>แนะนำสื่อเรียนรู้เสริมรายบุคคล</span>
+            </span>
+            <span className="text-[9px] font-bold text-pink-600 bg-white px-2 py-0.5 rounded-full border border-pink-200">
+              Personalized AI
+            </span>
+          </div>
+
+          <div className="grid gap-2">
+            <a
+              href="https://www.youtube.com/results?search_query=Hofstede+cultural+dimensions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-rose-200 text-xs hover:border-rose-400 transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Tv className="h-4 w-4 text-rose-600 shrink-0" />
+                <div>
+                  <p className="font-bold text-ink text-[11px]">YouTube 10 นาที: Hofstede's 6 Dimensions</p>
+                  <p className="text-[10px] text-grey-600">สรุปภาพรวมพร้อมตัวอย่างประยุกต์จริง</p>
+                </div>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+            </a>
+
+            <div className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-blue-200 text-xs">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-blue-600 shrink-0" />
+                <div>
+                  <p className="font-bold text-ink text-[11px]">หนังสืออ่านเสริม: Cultures and Organizations</p>
+                  <p className="text-[10px] text-grey-600">SPU E-Book Library (บทที่ 2)</p>
+                </div>
+              </div>
+              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">แนะนำ</span>
+            </div>
+          </div>
         </div>
 
         {/* MAIN CALL TO ACTION 3 MODES GRID */}

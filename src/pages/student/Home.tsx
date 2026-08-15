@@ -9,11 +9,16 @@ import {
 } from 'recharts'
 import {
   Award,
+  BookOpen,
+  ExternalLink,
   Flame,
   Gamepad2,
+  Lightbulb,
+  Sparkles,
   Star,
   TrendingUp,
   Trophy,
+  Tv,
   Zap,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
@@ -106,6 +111,91 @@ export default function Home() {
           <Zap className="h-5 w-5 fill-white" />
           <span>เริ่มเล่นเกมท้าดวล</span>
         </button>
+      </div>
+
+      {/* 💡 PERSONALIZED LEARNING SUGGESTIONS & EXTRA CHANNELS */}
+      <div className="rounded-3xl border-2 border-pink-400 bg-paper p-5 shadow-md space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-pink-100 text-pink-600 font-bold">
+              <Lightbulb className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-ink">คำแนะนำการเรียนรู้ส่วนบุคคล</h3>
+              <p className="text-[10px] text-pink-600 font-semibold">วิเคราะห์จากผลคะแนนของคุณ {currentStudent.nickname}</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
+            AI Suggestion
+          </span>
+        </div>
+
+        <p className="text-xs text-grey-600 leading-relaxed">
+          ผลคะแนนของคุณในบท <strong className="text-ink">Hofstede's Cultural Dimensions</strong> อยู่ที่ 80%! เพื่ออัปสปีดความเข้าใจให้เต็ม 100% แนะนำช่องทางเสริมเพิ่มเติม:
+        </p>
+
+        {/* YouTube Suggestion */}
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-3 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-rose-700">
+              <Tv className="h-4 w-4 text-rose-600" />
+              <span>วิดีโอสรุปแนะนำ (YouTube)</span>
+            </span>
+            <span className="text-[9px] font-bold text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">10 นาที</span>
+          </div>
+          <p className="text-xs font-semibold text-ink">
+            Hofstede's 6 Cultural Dimensions Explained With Real-World Examples
+          </p>
+          <a
+            href="https://www.youtube.com/results?search_query=Hofstede+cultural+dimensions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline pt-0.5 cursor-pointer"
+          >
+            <span>▶️ เปิดดูบน YouTube</span>
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
+        {/* Book / Reading Suggestion */}
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-3 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-blue-700">
+              <BookOpen className="h-4 w-4 text-blue-600" />
+              <span>หนังสือ & E-Book แนะนำ</span>
+            </span>
+            <span className="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">SPU Library</span>
+          </div>
+          <p className="text-xs font-semibold text-ink">
+            Cultures and Organizations: Software of the Mind (บทที่ 2 หน้า 45-60)
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/student/review')}
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:underline pt-0.5 cursor-pointer"
+          >
+            <span>📖 อ่านสรุปย่อในศูนย์ทบทวน</span>
+            <ExternalLink className="h-3 w-3" />
+          </button>
+        </div>
+
+        {/* Actionable Flashcard Tip */}
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3 flex items-center justify-between gap-2">
+          <div className="space-y-0.5">
+            <p className="text-xs font-bold text-amber-800 flex items-center gap-1">
+              <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+              <span>ทบทวนแนะนำประจำวัน</span>
+            </p>
+            <p className="text-[11px] text-amber-900">ทบทวน Flashcards หมวด Uncertainty Avoidance อีก 5 ใบ</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/student/review')}
+            className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-amber-600 shrink-0 cursor-pointer"
+          >
+            ทบทวน +10XP
+          </button>
+        </div>
       </div>
 
       {/* 🏆 LEADERBOARD CARD (อันดับผู้นำคลาสเรียน) */}
