@@ -6,28 +6,65 @@ import {
   ChevronRight,
   Flame,
   RotateCcw,
-  Search,
   Sparkles,
   Star,
+  Swords,
   Trophy,
   Zap,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
-import type { Student } from '@/data/seed-data'
+import type { PretestQuestion } from '@/data/seed-data'
+
+/**
+ * Challenge modes. The student is already signed in, so this screen asks what
+ * they want to play rather than who they are — each mode just picks a different
+ * slice of the question bank and its own XP weight.
+ */
+const CHALLENGES = [
+  {
+    id: 'speed',
+    name: 'สปีดควิซรวมทุกระดับ',
+    tagline: 'ครบทุกข้อ ตั้งแต่ง่ายถึงยาก',
+    xpPerQuestion: 10,
+    icon: Zap,
+    accent: 'border-pink-400 bg-pink-50',
+    badge: 'bg-pink-600 text-paper',
+    match: () => true,
+  },
+  {
+    id: 'warmup',
+    name: 'วอร์มอัพ เก็บพื้นฐาน',
+    tagline: 'เฉพาะข้อง่าย เหมาะกับการเริ่มต้น',
+    xpPerQuestion: 5,
+    icon: Sparkles,
+    accent: 'border-pink-200 bg-paper',
+    badge: 'bg-pink-100 text-pink-700',
+    match: (q: PretestQuestion) => q.difficulty === 'easy',
+  },
+  {
+    id: 'boss',
+    name: 'บอสไฟต์ ข้อท้าทาย',
+    tagline: 'เฉพาะข้อปานกลางถึงยาก XP คูณสอง',
+    xpPerQuestion: 20,
+    icon: Flame,
+    accent: 'border-amber-300 bg-amber-50',
+    badge: 'bg-amber-500 text-paper',
+    match: (q: PretestQuestion) => q.difficulty !== 'easy',
+  },
+] as const
+
+type Challenge = (typeof CHALLENGES)[number]
 
 export default function Join() {
   const navigate = useNavigate()
-  const { students, generatedContent } = useApp()
+  const { currentStudent, generatedContent } = useApp()
 
-  // Game Flow Steps: 1 = Identity Selection, 2 = Question Screen, 3 = Results Screen
+  // 1 = challenge selection, 2 = question screen, 3 = results
   const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [challenge, setChallenge] = useState<Challenge | null>(null)
+  const [questions, setQuestions] = useState<PretestQuestion[]>([])
 
-  // Step 1: Selected Student & Search State
-  const [activeStudent, setActiveStudent] = useState<Student | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-
-  // Step 2: Game State
   const [qIndex, setQIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
@@ -36,21 +73,13 @@ export default function Join() {
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
 
-  // Pretest Questions from generatedContent
-  const questions = generatedContent.pretest
-  const currentQuestion = questions[qIndex] || questions[0]
+  const currentQuestion = questions[qIndex]
 
-  // Filter students for Step 1
-  const filteredStudents = students.filter(
-    (s) =>
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.faculty.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  // Step 1: Choose student identity
-  const handleSelectStudent = (student: Student) => {
-    setActiveStudent(student)
+  const startChallenge = (c: Challenge) => {
+    const set = generatedContent.pretest.filter(c.match)
+    if (set.length === 0) return
+    setChallenge(c)
+    setQuestions(set)
     setStep(2)
     setQIndex(0)
     setScore(0)
@@ -60,9 +89,8 @@ export default function Join() {
     setShowFeedback(false)
   }
 
-  // Step 2: Handle Answer Selection
   const handleAnswer = (choiceIdx: number) => {
-    if (selectedChoice !== null) return // prevent multi-click
+    if (selectedChoice !== null || !currentQuestion || !challenge) return
 
     setSelectedChoice(choiceIdx)
     setShowFeedback(true)
@@ -71,32 +99,31 @@ export default function Join() {
     setIsCorrect(correct)
 
     if (correct) {
-      setScore((prev) => prev + 10)
+      setScore((prev) => prev + challenge.xpPerQuestion)
       setStreak((prev) => {
-        const newStreak = prev + 1
-        setMaxStreak((m) => Math.max(m, newStreak))
-        return newStreak
+        const next = prev + 1
+        setMaxStreak((m) => Math.max(m, next))
+        return next
       })
     } else {
       setStreak(0)
     }
 
-    // Auto advance after 2.5 seconds
     setTimeout(() => {
       if (qIndex < questions.length - 1) {
         setQIndex((prev) => prev + 1)
         setSelectedChoice(null)
         setShowFeedback(false)
       } else {
-        setStep(3) // Proceed to Results
+        setStep(3)
       }
     }, 2500)
   }
 
-  // Restart quiz
   const handleRestart = () => {
     setStep(1)
-    setActiveStudent(null)
+    setChallenge(null)
+    setQuestions([])
     setQIndex(0)
     setScore(0)
     setStreak(0)
@@ -107,93 +134,98 @@ export default function Join() {
 
   return (
     <div className="mx-auto w-full max-w-[390px] space-y-4 pb-12">
-      {/* STEP 1: IDENTITY SELECTION */}
+      {/* STEP 1: CHALLENGE SELECTION */}
       {step === 1 && (
-        <div className="space-y-4 animate-pop">
-          {/* Header Card */}
-          <div className="rounded-3xl border-2 border-pink-300/80 bg-paper p-5 text-center shadow-md space-y-3">
+        <div className="animate-pop space-y-4">
+          <div className="space-y-3 rounded-3xl border-2 border-pink-300/80 bg-paper p-5 text-center shadow-md">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 shadow-inner">
-              <Zap className="h-7 w-7" />
+              <Swords className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-ink">เข้าร่วมภารกิจรอบนี้</h1>
-              <p className="text-xs text-grey-600 mt-0.5">
-                เลือกชื่อของคุณเพื่อเริ่มตอบคำถามท้าดวล
+              <h1 className="text-xl font-bold text-ink">เลือกชาเลนจ์ที่อยากลุย</h1>
+              <p className="mt-0.5 text-xs text-grey-600">
+                หัวข้อ: Hofstede's Cultural Dimensions
               </p>
             </div>
 
-            {/* Pre-filled Join Code */}
-            <div className="flex items-center justify-between rounded-xl bg-pink-50 px-3.5 py-2 border border-pink-200">
-              <span className="text-xs font-semibold text-pink-600">รหัสเข้าร่วม:</span>
-              <span className="font-mono text-base font-black text-ink tracking-wider">
-                HF2024
+            {/* Identity comes from the signed-in session — no name picking */}
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-pink-50 px-3.5 py-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-pink-600 text-[11px] font-bold text-paper">
+                {currentStudent.nickname.slice(0, 2)}
+              </span>
+              <span className="text-xs font-semibold text-ink">
+                เข้าแข่งในชื่อ {currentStudent.name} ({currentStudent.nickname})
               </span>
             </div>
           </div>
 
-          {/* Student Search */}
-          <div className="space-y-2">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-grey-600" />
-              <input
-                type="text"
-                placeholder="ค้นหาชื่อ หรือ ชื่อเล่น..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-2xl border border-grey-300/80 bg-paper pl-10 pr-4 py-3 text-sm text-ink outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
-              />
-            </div>
-
-            {/* List of 24 Students */}
-            <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-              {filteredStudents.map((s) => (
+          <div className="space-y-3">
+            {CHALLENGES.map((c) => {
+              const count = generatedContent.pretest.filter(c.match).length
+              const Icon = c.icon
+              return (
                 <button
-                  key={s.id}
+                  key={c.id}
                   type="button"
-                  onClick={() => handleSelectStudent(s)}
-                  className="w-full min-h-[56px] py-3 px-4 rounded-2xl border-2 border-grey-300/60 bg-paper hover:border-pink-500 hover:bg-pink-50/50 active:scale-[0.98] transition-all flex items-center justify-between text-left cursor-pointer shadow-2xs"
+                  onClick={() => startChallenge(c)}
+                  disabled={count === 0}
+                  className={cn(
+                    'flex w-full items-center gap-3.5 rounded-2xl border-2 p-4 text-left shadow-2xs transition-all',
+                    'hover:shadow-md active:scale-[0.98] disabled:opacity-50',
+                    c.accent,
+                  )}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-100 text-pink-700 font-bold text-xs">
-                      {s.nickname.slice(0, 2)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-bold text-ink">{s.name}</span>
-                        <span className="text-xs font-semibold text-pink-600">
-                          "{s.nickname}"
-                        </span>
-                      </div>
-                      <span className="inline-block rounded-md bg-canvas px-2 py-0.5 text-[10px] font-medium text-grey-600 border border-grey-300/40 mt-0.5">
-                        {s.faculty}
+                  <span
+                    className={cn(
+                      'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                      c.badge,
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold text-ink">{c.name}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-grey-600">
+                      {c.tagline}
+                    </span>
+                    <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-md border border-grey-300/50 bg-paper px-1.5 py-0.5 text-[10px] font-semibold text-grey-600">
+                        {count} ข้อ
                       </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-grey-300 group-hover:text-pink-600" />
+                      <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-600">
+                        +{c.xpPerQuestion} XP/ข้อ
+                      </span>
+                      <span className="rounded-md border border-pink-200 bg-pink-50 px-1.5 py-0.5 text-[10px] font-bold text-pink-600">
+                        เต็ม {count * c.xpPerQuestion} XP
+                      </span>
+                    </span>
+                  </span>
+
+                  <ChevronRight className="h-5 w-5 shrink-0 text-grey-300" />
                 </button>
-              ))}
-            </div>
+              )
+            })}
           </div>
         </div>
       )}
 
       {/* STEP 2: QUESTION SCREEN */}
-      {step === 2 && activeStudent && (
-        <div className="space-y-4 animate-fadeIn">
-          {/* Player Header Bar */}
+      {step === 2 && challenge && currentQuestion && (
+        <div className="animate-fadeIn space-y-4">
           <div className="flex items-center justify-between rounded-2xl border border-pink-200 bg-pink-50 p-3 shadow-2xs">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-600 text-xs font-bold text-white">
-                {activeStudent.nickname.slice(0, 2)}
+                {currentStudent.nickname.slice(0, 2)}
               </div>
               <div>
-                <p className="text-xs font-bold text-ink">{activeStudent.nickname}</p>
-                <p className="text-[10px] text-pink-600 font-medium">{activeStudent.faculty}</p>
+                <p className="text-xs font-bold text-ink">{currentStudent.nickname}</p>
+                <p className="text-[10px] font-medium text-pink-600">{challenge.name}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1 rounded-full bg-paper px-2.5 py-1 text-xs font-bold text-amber-600 border border-amber-200">
+              <span className="flex items-center gap-1 rounded-full border border-amber-200 bg-paper px-2.5 py-1 text-xs font-bold text-amber-600">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
                 {score} XP
               </span>
@@ -203,24 +235,21 @@ export default function Join() {
             </div>
           </div>
 
-          {/* Question Card */}
           <div className="space-y-4 rounded-3xl border-2 border-grey-300/60 bg-paper p-5 shadow-xs">
             <div className="flex items-center justify-between text-xs font-bold text-grey-600">
               <span>ภารกิจข้อที่ {qIndex + 1}</span>
               {streak > 1 && (
-                <span className="flex items-center gap-1 text-orange-500 animate-bounce">
+                <span className="flex animate-bounce items-center gap-1 text-orange-500">
                   <Flame className="h-4 w-4 fill-orange-400" />
                   <span>{streak} ติดต่อกัน!</span>
                 </span>
               )}
             </div>
 
-            {/* Question Stem (18px+) */}
-            <h2 className="text-lg lg:text-xl font-bold text-ink leading-snug">
+            <h2 className="text-lg font-bold leading-snug text-ink lg:text-xl">
               {currentQuestion.stem}
             </h2>
 
-            {/* 4 Big Option Buttons (Alternating Pink-300 / Pink-50, min 64px height) */}
             <div className="space-y-3 pt-2">
               {currentQuestion.options.map((optionText, optIdx) => {
                 const isSelected = selectedChoice === optIdx
@@ -248,17 +277,17 @@ export default function Join() {
                     onClick={() => handleAnswer(optIdx)}
                     disabled={selectedChoice !== null}
                     className={cn(
-                      'w-full min-h-[64px] py-3.5 px-4 text-sm font-semibold rounded-2xl border-2 transition-all flex items-center justify-between text-left cursor-pointer active:scale-[0.98]',
-                      bgClass
+                      'flex min-h-[64px] w-full cursor-pointer items-center justify-between rounded-2xl border-2 px-4 py-3.5 text-left text-sm font-semibold transition-all active:scale-[0.98]',
+                      bgClass,
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <span
                         className={cn(
-                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold border',
+                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold',
                           showFeedback && isAnswer
-                            ? 'bg-white text-pink-600 border-white'
-                            : 'bg-paper text-grey-600 border-grey-300'
+                            ? 'border-white bg-white text-pink-600'
+                            : 'border-grey-300 bg-paper text-grey-600',
                         )}
                       >
                         {String.fromCharCode(65 + optIdx)}
@@ -267,7 +296,7 @@ export default function Join() {
                     </div>
 
                     {showFeedback && isAnswer && (
-                      <Check className="h-5 w-5 text-white shrink-0 stroke-[3]" />
+                      <Check className="h-5 w-5 shrink-0 stroke-[3] text-white" />
                     )}
                   </button>
                 )
@@ -275,36 +304,33 @@ export default function Join() {
             </div>
           </div>
 
-          {/* Feedback & Confetti Container */}
           {showFeedback && (
-            <div className="space-y-3 animate-pop">
+            <div className="animate-pop space-y-3">
               {isCorrect ? (
-                /* Correct Answer Feedback */
-                <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-center space-y-1 shadow-md">
-                  {/* CSS Confetti Sparkle Icons */}
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <Sparkles className="animate-confetti h-6 w-6 text-amber-500 absolute" />
-                    <Star className="animate-confetti h-5 w-5 text-pink-500 absolute delay-100 fill-pink-500" />
-                    <CheckCircle2 className="animate-confetti h-6 w-6 text-emerald-500 absolute delay-200" />
+                <div className="relative space-y-1 overflow-hidden rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-center shadow-md">
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <Sparkles className="animate-confetti absolute h-6 w-6 text-amber-500" />
+                    <Star className="animate-confetti absolute h-5 w-5 fill-pink-500 text-pink-500 delay-100" />
+                    <CheckCircle2 className="animate-confetti absolute h-6 w-6 text-emerald-500 delay-200" />
                   </div>
 
-                  <p className="text-base font-extrabold text-emerald-700 flex items-center justify-center gap-1.5">
+                  <p className="flex items-center justify-center gap-1.5 text-base font-extrabold text-emerald-700">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                     <span>ยอดเยี่ยมมาก! ตอบถูกรอบนี้</span>
                   </p>
                   <p className="animate-bounce text-3xl font-black text-pink-600">
-                    +10 XP
+                    +{challenge.xpPerQuestion} XP
                   </p>
                 </div>
               ) : (
-                /* Gentle Wrong Answer Card (NEVER USE "ผิด") */
-                <div className="rounded-2xl border-2 border-pink-300 bg-pink-50 p-4 space-y-2 shadow-xs">
+                <div className="space-y-2 rounded-2xl border-2 border-pink-300 bg-pink-50 p-4 shadow-xs">
                   <div className="flex items-center gap-2 text-base font-bold text-pink-600">
                     <Sparkles className="h-5 w-5" />
                     <span>ลองคิดใหม่นะ</span>
                   </div>
-                  <p className="text-xs text-grey-600 leading-relaxed">
-                    <strong>คำแนะนำ: </strong>{currentQuestion.misconception}
+                  <p className="text-xs leading-relaxed text-grey-600">
+                    <strong>คำแนะนำ: </strong>
+                    {currentQuestion.misconception}
                   </p>
                 </div>
               )}
@@ -314,36 +340,34 @@ export default function Join() {
       )}
 
       {/* STEP 3: RESULTS SCREEN */}
-      {step === 3 && activeStudent && (
-        <div className="space-y-5 animate-pop">
-          {/* Header Card */}
-          <div className="rounded-3xl border-2 border-pink-300/80 bg-paper p-6 text-center shadow-md space-y-3">
+      {step === 3 && challenge && (
+        <div className="animate-pop space-y-5">
+          <div className="space-y-3 rounded-3xl border-2 border-pink-300/80 bg-paper p-6 text-center shadow-md">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-pink-100 text-pink-600 shadow-inner">
               <Trophy className="h-9 w-9 text-amber-500" />
             </div>
             <div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-xs font-bold text-pink-600 border border-pink-200">
+              <span className="inline-flex items-center gap-1 rounded-full border border-pink-200 bg-pink-50 px-3 py-1 text-xs font-bold text-pink-600">
                 <Sparkles className="h-3.5 w-3.5 text-pink-600" />
                 <span>ภารกิจเสร็จสิ้น</span>
               </span>
               <h1 className="mt-2 text-2xl font-bold text-ink">ผลการท้าดวลรอบนี้</h1>
               <p className="text-xs text-grey-600">
-                เก่งมากคุณ {activeStudent.nickname} ทำสำเร็จแล้ว!
+                เก่งมากคุณ {currentStudent.nickname} จบ{challenge.name}แล้ว!
               </p>
             </div>
 
-            {/* XP & Streak Stat Box */}
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="rounded-2xl bg-pink-50 p-3 text-center border border-pink-200">
+              <div className="rounded-2xl border border-pink-200 bg-pink-50 p-3 text-center">
                 <span className="text-[11px] font-semibold text-grey-600">XP ที่ได้รับ</span>
-                <p className="text-2xl font-black text-pink-600 flex items-center justify-center gap-1">
+                <p className="flex items-center justify-center gap-1 text-2xl font-black text-pink-600">
                   <Star className="h-5 w-5 fill-amber-400 text-amber-500" />
                   <span>{score} XP</span>
                 </p>
               </div>
-              <div className="rounded-2xl bg-amber-50 p-3 text-center border border-amber-200">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center">
                 <span className="text-[11px] font-semibold text-grey-600">Streak สูงสุด</span>
-                <p className="text-2xl font-black text-amber-600 flex items-center justify-center gap-1">
+                <p className="flex items-center justify-center gap-1 text-2xl font-black text-amber-600">
                   <Flame className="h-5 w-5 fill-amber-500 text-amber-500" />
                   <span>{maxStreak} ข้อ</span>
                 </p>
@@ -351,16 +375,13 @@ export default function Join() {
             </div>
           </div>
 
-          {/* Leaderboard Card (Top 5 + User's position - Never show bottom ranks!) */}
-          <div className="rounded-3xl border border-grey-300/60 bg-paper p-5 shadow-xs space-y-3">
+          <div className="space-y-3 rounded-3xl border border-grey-300/60 bg-paper p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-ink flex items-center gap-1.5">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-ink">
                 <Trophy className="h-4 w-4 text-amber-500" />
                 <span>อันดับยอดเยี่ยมในคลาส</span>
               </h3>
-              <span className="text-xs font-bold text-pink-600">
-                คุณอยู่อันดับที่ 5 จาก 24
-              </span>
+              <span className="text-xs font-bold text-pink-600">คุณอยู่อันดับที่ 5 จาก 24</span>
             </div>
 
             <div className="space-y-2">
@@ -369,37 +390,45 @@ export default function Join() {
                 { rank: 2, name: 'วรรณา', nickname: 'นุ้ย', faculty: 'Accounting', xp: 50 },
                 { rank: 3, name: 'พรรณี', nickname: 'พลอย', faculty: 'Business Admin', xp: 40 },
                 { rank: 4, name: 'ธีรวัฒน์', nickname: 'ต้น', faculty: 'Engineering', xp: 40 },
-                { rank: 5, name: activeStudent.name, nickname: activeStudent.nickname, faculty: activeStudent.faculty, xp: Math.max(score, 30) },
+                {
+                  rank: 5,
+                  name: currentStudent.name,
+                  nickname: currentStudent.nickname,
+                  faculty: currentStudent.faculty,
+                  xp: Math.max(score, 30),
+                },
               ].map((item) => {
-                const isUser = item.nickname === activeStudent.nickname
+                const isUser = item.nickname === currentStudent.nickname
                 return (
                   <div
                     key={item.rank}
                     className={cn(
-                      'flex items-center justify-between rounded-2xl p-3 text-xs border font-medium',
+                      'flex items-center justify-between rounded-2xl border p-3 text-xs font-medium',
                       isUser
-                        ? 'border-pink-300 bg-pink-50 text-pink-700 font-bold'
-                        : 'border-grey-300/40 bg-canvas text-ink'
+                        ? 'border-pink-300 bg-pink-50 font-bold text-pink-700'
+                        : 'border-grey-300/40 bg-canvas text-ink',
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <span className={cn(
-                        'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0',
-                        item.rank === 1 && 'bg-amber-100 text-amber-700 border border-amber-300',
-                        item.rank === 2 && 'bg-slate-200 text-slate-700 border border-slate-300',
-                        item.rank === 3 && 'bg-amber-700/10 text-amber-800 border border-amber-700/20',
-                        item.rank > 3 && 'bg-paper text-grey-600 border border-grey-300/40'
-                      )}>
+                      <span
+                        className={cn(
+                          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                          item.rank === 1 && 'border border-amber-300 bg-amber-100 text-amber-700',
+                          item.rank === 2 && 'border border-slate-300 bg-slate-200 text-slate-700',
+                          item.rank === 3 && 'border border-amber-700/20 bg-amber-700/10 text-amber-800',
+                          item.rank > 3 && 'border border-grey-300/40 bg-paper text-grey-600',
+                        )}
+                      >
                         {item.rank}
                       </span>
                       <div>
-                        <span className="font-bold">{item.name} ({item.nickname})</span>
-                        <p className="text-[10px] text-grey-600">
-                          {item.faculty}
-                        </p>
+                        <span className="font-bold">
+                          {item.name} ({item.nickname})
+                        </span>
+                        <p className="text-[10px] text-grey-600">{item.faculty}</p>
                       </div>
                     </div>
-                    <span className={cn('font-black text-sm', isUser ? 'text-white' : 'text-pink-600')}>
+                    <span className={cn('text-sm font-black', isUser ? 'text-pink-700' : 'text-pink-600')}>
                       {item.xp} XP
                     </span>
                   </div>
@@ -408,23 +437,23 @@ export default function Join() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => navigate('/student')}
-              className="w-full min-h-[56px] rounded-2xl bg-pink-600 py-3.5 px-4 text-base font-bold text-white shadow-md hover:bg-pink-600/90 transition-all cursor-pointer text-center"
+              onClick={handleRestart}
+              className="flex min-h-[56px] w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-pink-600 px-4 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-pink-600/90"
             >
-              กลับไปหน้าหลัก (Home)
+              <Swords className="h-5 w-5" />
+              <span>เลือกชาเลนจ์อื่น</span>
             </button>
 
             <button
               type="button"
-              onClick={handleRestart}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-grey-300 bg-paper py-3 px-4 text-sm font-semibold text-grey-600 hover:bg-canvas transition-colors cursor-pointer"
+              onClick={() => navigate('/student')}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border border-grey-300 bg-paper px-4 py-3 text-sm font-semibold text-grey-600 transition-colors hover:bg-canvas"
             >
               <RotateCcw className="h-4 w-4" />
-              <span>ท้าดวลอีกรอบ</span>
+              <span>กลับไปหน้าหลัก (Home)</span>
             </button>
           </div>
         </div>

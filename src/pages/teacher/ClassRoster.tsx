@@ -222,9 +222,9 @@ export default function ClassRoster() {
 
       {/* Student Roster Table */}
       <div className="overflow-hidden rounded-2xl border border-grey-300/60 bg-paper shadow-xs">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[480px] overflow-y-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold">
+            <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold sticky top-0 z-10 shadow-2xs">
               <tr>
                 <th className="py-3.5 px-4">นักศึกษา</th>
                 <th className="py-3.5 px-4">คณะ / ชั้นปี</th>

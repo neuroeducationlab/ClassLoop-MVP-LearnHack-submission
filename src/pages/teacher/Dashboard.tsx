@@ -496,10 +496,10 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-grey-300/60 bg-paper">
-            <div className="overflow-x-auto">
+          <div className="overflow-hidden rounded-2xl border border-grey-300/60 bg-paper shadow-xs">
+            <div className="overflow-x-auto max-h-[340px] overflow-y-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold">
+                <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold sticky top-0 z-10 shadow-2xs">
                   <tr>
                     <th className="py-3 px-4">นักศึกษา</th>
                     <th className="py-3 px-4">คณะ</th>
@@ -537,7 +537,7 @@ export default function Dashboard() {
                           </td>
 
                           <td className="py-3 px-4">
-                            <span className="rounded-md bg-pink-50 px-2 py-0.5 font-bold text-pink-600 border border-pink-200 text-[11px]">
+                            <span className="rounded-md bg-pink-50 px-2 py-0.5 font-bold text-pink-600 border border-pink-200 text-[11px] whitespace-nowrap">
                               {s.faculty}
                             </span>
                           </td>
@@ -547,9 +547,10 @@ export default function Dashboard() {
                               {hw.missingList.map((m) => (
                                 <span
                                   key={m.id}
-                                  className="rounded bg-rose-100 text-rose-800 text-[11px] font-bold px-2 py-0.5 border border-rose-200"
+                                  className="rounded bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 border border-rose-200 whitespace-nowrap"
+                                  title={m.title}
                                 >
-                                  {m.code}: {m.title}
+                                  {m.code}: {m.title.split('(')[0].trim()}
                                 </span>
                               ))}
                             </div>

@@ -691,6 +691,17 @@ export const DICTIONARY_EN: Record<string, string> = {
   'เน้นเปรียบเทียบระหว่าง คณะบริหารฯ (ชอบความตรงไปตรงมา) vs คณะดิจิทัลมีเดียฯ (เน้นความคิดสร้างสรรค์แบบเปิด) เพื่อสร้างบรรยากาศแลกเปลี่ยนจริง':
     'Contrast Business Admin (which prefers directness) with Digital Media (which favours open creativity) to spark genuine exchange',
 
+
+  /* ------------------------------------------------ student: challenges -- */
+  'เลือกชาเลนจ์ที่อยากลุย': 'Pick a challenge',
+  'สปีดควิซรวมทุกระดับ': 'Speed quiz — all levels',
+  'ครบทุกข้อ ตั้งแต่ง่ายถึงยาก': 'Every question, easy through hard',
+  'วอร์มอัพ เก็บพื้นฐาน': 'Warm-up — build the basics',
+  'เฉพาะข้อง่าย เหมาะกับการเริ่มต้น': 'Easy questions only, great for starting out',
+  'บอสไฟต์ ข้อท้าทาย': 'Boss fight — the tough ones',
+  'เฉพาะข้อปานกลางถึงยาก XP คูณสอง': 'Medium and hard only, double XP',
+  'เลือกชาเลนจ์อื่น': 'Pick another challenge',
+
   /* ------------------------------------------------------------ misc -- */
   'เกิดข้อผิดพลาดขึ้นในระบบ': 'Something went wrong',
   'ระบบเกิดข้อผิดพลาดบางอย่าง โปรดลองกดโหลดใหม่อีกครั้ง':
@@ -758,6 +769,17 @@ export const PATTERN_RULES: { re: RegExp; to: string }[] = [
   { re: /^📄\s*ไฟล์ที่ใช้:$/, to: '📄 File in use:' },
   { re: /^วิเคราะห์จากผลคะแนนของคุณ$/, to: 'Based on your scores' },
   { re: /^ปี$/, to: 'Year' },
+  { re: /^เข้าแข่งในชื่อ (.+)$/, to: 'Playing as $1' },
+  { re: /^ภารกิจข้อที่\s*(\d+)?$/, to: 'Question $1' },
+  { re: /^ภารกิจข้อที่$/, to: 'Question' },
+  { re: /^(\d+)\s*ติดต่อกัน!$/, to: '$1 in a row!' },
+  { re: /^ติดต่อกัน!$/, to: 'in a row!' },
+  { re: /^\+(\d+)\s*XP\/ข้อ$/, to: '+$1 XP/question' },
+  { re: /^เต็ม\s*(\d+)\s*XP$/, to: '$1 XP total' },
+  { re: /^เก่งมากคุณ\s*(.+?)\s*จบ(.+)แล้ว!$/, to: 'Great work, $1 — you finished $2!' },
+  { re: /^เก่งมากคุณ$/, to: 'Great work,' },
+  { re: /^จบ$/, to: 'finished' },
+  { re: /^แล้ว!$/, to: '!' },
   { re: /^ส\.$/, to: 'W' },
   { re: /^สัปดาห์ที่$/, to: 'Week' },
   { re: /^·?\s*สัปดาห์$/, to: '· Week' },
