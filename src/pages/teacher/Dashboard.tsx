@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
-  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -14,21 +9,20 @@ import {
   YAxis,
 } from 'recharts'
 import {
-  Check,
+  AlertCircle,
   CheckCircle2,
-  Clock,
   FileDown,
-  Flame,
-  Search,
-  Send,
-  Sparkles,
-  Star,
-  Trophy,
+  FileText,
+  PieChart as PieIcon,
   X,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { useReveal } from '@/hooks/useReveal'
-import { WEEKLY_SCORES, type ActivityFormat } from '@/data/seed-data'
+import {
+  ASSIGNMENTS,
+  WEEKLY_SCORES,
+  getStudentAssignments,
+} from '@/data/seed-data'
 import { cn } from '@/lib/utils'
 
 /* ------------------------------------------------------------- constants -- */
@@ -44,7 +38,6 @@ const FACULTY_TH: Record<string, string> = {
   'Digital Media': 'ดิจิทัลมีเดีย',
 }
 
-/** Short axis names so the vertical chart reads at a glance. */
 const FACULTY_SHORT: Record<string, string> = {
   Accounting: 'บัญชี',
   'Communication Arts': 'นิเทศ',
@@ -62,7 +55,6 @@ const TOPIC_SHORT: Record<string, string> = {
   t6: 'Ethics & CSR',
 }
 
-/** Line-chart series: class average + one line per faculty, each own colour. */
 const SERIES = [
   { key: 'class', th: 'ทั้งชั้น', color: INK, width: 3.5 },
   { key: 'Accounting', th: 'การบัญชี', color: '#D12E80', width: 2.5 },
@@ -72,39 +64,97 @@ const SERIES = [
   { key: 'Communication Arts', th: 'นิเทศศาสตร์', color: '#0D9488', width: 2.5 },
 ] as const
 
-const GAME_SLOT: Record<ActivityFormat, string> = {
-  'quick-game': 'เปิดคาบ',
-  debate: 'กลางคาบ',
-  'case-based': 'ท้ายคาบ',
+/* -------------------------------------------------- MultiRingChart Component -- */
+
+function MultiRingChart({
+  submissionPct = 92,
+  participationPct = 83,
+  comprehensionPct = 63,
+  submissionCount = '22/24',
+}: {
+  submissionPct?: number
+  participationPct?: number
+  comprehensionPct?: number
+  submissionCount?: string
+}) {
+  const rings = [
+    { label: 'ส่งแล้ว', pct: submissionPct, value: submissionCount, color: '#D12E80', bg: '#FCE7F3', r: 72, strokeWidth: 10 },
+    { label: 'มีส่วนร่วมในคลาส', pct: participationPct, value: `${participationPct}%`, color: '#8B5CF6', bg: '#EDE9FE', r: 56, strokeWidth: 10 },
+    { label: 'ความเข้าใจเฉลี่ย', pct: comprehensionPct, value: `${comprehensionPct}%`, color: '#0D9488', bg: '#CCFBF1', r: 40, strokeWidth: 10 },
+  ]
+
+  return (
+    <div className="flex flex-col items-center justify-between h-full p-2">
+      <div className="relative flex items-center justify-center w-56 h-56 my-2">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 180 180">
+          {rings.map((ring) => {
+            const circumference = 2 * Math.PI * ring.r
+            const offset = circumference - (ring.pct / 100) * circumference
+            return (
+              <g key={ring.label}>
+                <circle
+                  cx="90"
+                  cy="90"
+                  r={ring.r}
+                  fill="none"
+                  stroke={ring.bg}
+                  strokeWidth={ring.strokeWidth}
+                />
+                <circle
+                  cx="90"
+                  cy="90"
+                  r={ring.r}
+                  fill="none"
+                  stroke={ring.color}
+                  strokeWidth={ring.strokeWidth}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={offset}
+                  strokeLinecap="round"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </g>
+            )
+          })}
+        </svg>
+
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="text-3xl font-black text-ink">{submissionPct}%</span>
+          <span className="text-[11px] font-extrabold text-pink-600 uppercase tracking-wide mt-0.5">ภาพรวมการเรียน</span>
+        </div>
+      </div>
+
+      <div className="w-full space-y-2 mt-2">
+        {rings.map((ring) => (
+          <div key={ring.label} className="flex items-center justify-between rounded-2xl bg-canvas px-3.5 py-2.5 border border-grey-300/40">
+            <div className="flex items-center gap-2.5">
+              <span className="h-3.5 w-3.5 rounded-full shrink-0 shadow-2xs" style={{ backgroundColor: ring.color }} />
+              <span className="text-xs font-extrabold text-ink">{ring.label}</span>
+            </div>
+            <span className="text-xs font-black" style={{ color: ring.color }}>{ring.value} ({ring.pct}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 /* ---------------------------------------------------------------- page ---- */
 
 export default function Dashboard() {
-  const navigate = useNavigate()
   const revealRef = useReveal(true)
   const {
     course,
     students,
     responses,
     topics,
-    generatedContent,
-    remediation,
-    remediationSent,
-    sendRemediation,
     getSubmissionCount,
     getAverageScore,
     getParticipationRate,
-    t,
   } = useApp()
 
-  const [sheetOpen, setSheetOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
-  const [autoRemind, setAutoRemind] = useState(false)
   const [remindedIds, setRemindedIds] = useState<Set<string>>(new Set())
-  const [scheduledReminder, setScheduledReminder] = useState<{ date: string; time: string } | null>(null)
-  const [remDate, setRemDate] = useState('2026-08-20')
-  const [remTime, setRemTime] = useState('18:00')
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('all')
   const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({
     class: true,
     Accounting: true,
@@ -120,22 +170,11 @@ export default function Dashboard() {
     [],
   )
 
-  useEffect(() => {
-    if (!sheetOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSheetOpen(false)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [sheetOpen])
-
   const showToast = (msg: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast(msg)
     toastTimer.current = setTimeout(() => setToast(null), 3200)
   }
-
-  /* -------- live derivations: everything recomputes when responses move -- */
 
   const facultyData = useMemo(() => {
     const facultyOf = new Map(students.map((s) => [s.id, s.faculty]))
@@ -161,33 +200,6 @@ export default function Dashboard() {
   const hasData = responses.length > 0
   const liveAverage = getAverageScore()
 
-  const pending = useMemo(() => {
-    const responded = new Set(responses.map((r) => r.studentId))
-    return students.filter((s) => !responded.has(s.id))
-  }, [students, responses])
-
-  /** Students scoring below 60% on the live pre-test — remediation targets. */
-  const lowScorers = useMemo(() => {
-    const correctOf = new Map<string, number>()
-    const answered = new Map<string, number>()
-    for (const r of responses) {
-      answered.set(r.studentId, (answered.get(r.studentId) ?? 0) + 1)
-      if (r.isCorrect) correctOf.set(r.studentId, (correctOf.get(r.studentId) ?? 0) + 1)
-    }
-    return students
-      .filter((s) => {
-        const total = answered.get(s.id) ?? 0
-        if (total === 0) return false
-        return ((correctOf.get(s.id) ?? 0) / total) * 100 < 60
-      })
-      .sort((a, b) => (correctOf.get(a.id) ?? 0) - (correctOf.get(b.id) ?? 0))
-  }, [students, responses])
-
-  /**
-   * Weekly line-chart rows. Weeks 1/3/4 come from WEEKLY_SCORES history;
-   * week 2 (Hofstede) is LIVE from responses so it moves with the demo;
-   * weeks 5-6 stay empty (not taught yet) and the lines simply stop.
-   */
   const weeklyData = useMemo(() => {
     const liveByFac = Object.fromEntries(facultyData.map((f) => [f.faculty, f.percent]))
     const topicByWeek = new Map(topics.map((t) => [t.week, TOPIC_SHORT[t.id] ?? t.title]))
@@ -210,596 +222,408 @@ export default function Dashboard() {
     })
   }, [facultyData, topics, hasData, liveAverage])
 
-  /** Pre → Post development rows; week 2's post-test is still pending. */
-  const devRows = useMemo(() => {
-    const rows = WEEKLY_SCORES.map((w) => ({
-      week: w.week,
-      topic: TOPIC_SHORT[w.topicId] ?? w.topicId,
-      pre: w.classPre,
-      post: w.classPost as number | null,
-    }))
-    rows.push({ week: 2, topic: TOPIC_SHORT.t2, pre: hasData ? liveAverage : 0, post: null })
-    return rows.sort((a, b) => a.week - b.week)
-  }, [hasData, liveAverage])
+  // Derive assignment completion stats for each student
+  const studentAssignmentData = useMemo(() => {
+    return students.map((s) => {
+      const hw = getStudentAssignments(s.id, s.avatarSeed)
+      return {
+        student: s,
+        hw,
+      }
+    })
+  }, [students])
 
-  const avgDelta = useMemo(() => {
-    const deltas = devRows.filter((r) => r.post !== null).map((r) => (r.post as number) - r.pre)
-    return deltas.length ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length) : 0
-  }, [devRows])
+  // Filter missing students based on selected assignment filter
+  const missingStudents = useMemo(() => {
+    return studentAssignmentData
+      .filter(({ hw }) => {
+        if (hw.isComplete) return false
+        if (selectedAssignmentId === 'all') return true
+        return hw.missingHwIds.includes(selectedAssignmentId)
+      })
+      .sort((a, b) => b.hw.missingPoints - a.hw.missingPoints)
+  }, [studentAssignmentData, selectedAssignmentId])
 
-  const stats = [
-    { label: t('submitted'), value: `${getSubmissionCount()}/${students.length}` },
-    { label: t('avgUnderstanding'), value: `${liveAverage}%` },
-    { label: t('participation'), value: `${getParticipationRate()}%` },
-  ]
-
-  /* ------------------------------------------------------------- actions -- */
+  const submissionPct = Math.round((getSubmissionCount() / students.length) * 100)
+  const participationPct = getParticipationRate()
+  const comprehensionPct = liveAverage
 
   const remindOne = (id: string, nickname: string) => {
     setRemindedIds((prev) => new Set(prev).add(id))
-    showToast(`ส่งข้อความเตือนถึงคุณ${nickname} แล้ว`)
+    showToast(`ส่งข้อความเตือนถึงคุณ${nickname} ผ่านระบบแจ้งเตือนเรียบร้อยแล้ว`)
   }
-
-  const confirmRemediation = () => {
-    sendRemediation()
-    setSheetOpen(false)
-    showToast(`ส่งชุดทบทวนรายบุคคลให้ ${lowScorers.length} คนแล้ว — ดูได้ในแท็บ "เรียน" ฝั่งนักศึกษา`)
-  }
-
-  /* -------------------------------------------------------------- render -- */
 
   return (
-    <div ref={revealRef} className="mx-auto max-w-7xl space-y-6 pb-12 animate-slide-up">
-      {/* page header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div ref={revealRef} className="mx-auto max-w-7xl space-y-6 pb-16">
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-grey-300/40 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-ink">{t('dashboard')}</h1>
-          <p className="mt-1 text-[15px] text-grey-600">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight">
+            แดชบอร์ดภาพรวมการเรียน (Analytics Dashboard)
+          </h1>
+          <p className="text-sm font-medium text-grey-600 mt-0.5">
             {course.code} · {course.name}
           </p>
         </div>
-        <div className="group relative">
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-grey-300/70 px-3 py-2 text-sm font-medium text-grey-300"
-          >
-            <FileDown className="h-4 w-4" />
-            {t('exportPdf')}
-          </button>
-          <span
-            role="tooltip"
-            className="pointer-events-none absolute right-0 top-full z-10 mt-1.5 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs text-paper group-hover:block"
-          >
-            เร็วๆ นี้
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={() => showToast('ส่งออกรายงานสรุปย่อ PDF เรียบร้อยแล้ว!')}
+          className="inline-flex items-center gap-2 rounded-2xl border border-grey-300/80 bg-paper px-4 py-2 text-xs font-bold text-ink shadow-xs hover:border-pink-300 hover:text-pink-600 transition-all cursor-pointer self-start sm:self-auto"
+        >
+          <FileDown className="h-4 w-4" />
+          <span>ส่งออกรายงาน PDF</span>
+        </button>
       </div>
 
-      {/* stat cards — big numbers for readability */}
-      <div className="reveal grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map(({ label, value }) => (
-          <div key={label} className="rounded-2xl border border-pink-100 bg-pink-50 p-5">
-            <p className="text-[15px] font-medium text-ink">{label}</p>
-            <p className="mt-2 text-4xl font-bold text-pink-500">{value}</p>
+      {/* SECTION 1: TOP ROW — Multi-ring Circle (Left) & Weekly Graph (Right) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* LEFT: Multi-ring Circular Progress Chart */}
+        <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm lg:col-span-4 flex flex-col justify-between">
+          <div>
+            <h2 className="text-lg font-extrabold text-ink flex items-center gap-2">
+              <PieIcon className="h-5 w-5 text-pink-600" />
+              <span>สรุปภาพรวมการเรียน</span>
+            </h2>
+            <p className="text-xs text-grey-600 mt-0.5 font-medium">
+              สถิติการส่งงาน การมีส่วนร่วม และคะแนนเฉลี่ย
+            </p>
           </div>
-        ))}
-      </div>
 
-      {/* ============ HERO — weekly understanding, the main display ============ */}
-      <div className="reveal rounded-2xl border border-grey-300/50 border-l-[3px] border-l-pink-600 bg-paper p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-ink">{t('weeklyUnderstanding')}</h2>
-
-        <div className="mt-4 h-[320px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={weeklyData} margin={{ top: 12, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid vertical={false} stroke={GREY_200} strokeDasharray="4 4" />
-              <XAxis
-                dataKey="label"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 14, fill: INK }}
-              />
-              <YAxis
-                domain={[0, 100]}
-                ticks={[0, 25, 50, 75, 100]}
-                width={38}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: '#6B6A70' }}
-              />
-              <Tooltip
-                formatter={(value: any, name: any) => [`${value}%`, name]}
-                labelFormatter={(_: any, payload: any) =>
-                  payload?.[0]?.payload
-                    ? `สัปดาห์ ${payload[0].payload.week} · ${payload[0].payload.topic}`
-                    : ''
-                }
-                contentStyle={{ borderRadius: 12, border: `1px solid ${GREY_200}`, fontSize: 14 }}
-              />
-              {SERIES.filter((s) => visibleSeries[s.key]).map((s) => (
-                <Line
-                  key={s.key}
-                  dataKey={s.key}
-                  name={s.th}
-                  stroke={s.color}
-                  strokeWidth={s.width}
-                  dot={{ r: 4, fill: s.color, strokeWidth: 0 }}
-                  activeDot={{ r: 6 }}
-                  animationDuration={800}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+          <MultiRingChart
+            submissionPct={submissionPct}
+            participationPct={participationPct}
+            comprehensionPct={comprehensionPct}
+            submissionCount={`${getSubmissionCount()}/${students.length}`}
+          />
         </div>
 
-        {/* series toggles */}
-        <div className="mt-2 flex flex-wrap gap-2">
-          {SERIES.map(({ key, th, color }) => {
-            const on = !!visibleSeries[key]
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setVisibleSeries((prev) => ({ ...prev, [key]: !prev[key] }))}
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors cursor-pointer',
-                  on ? 'bg-paper' : 'border-grey-200 text-grey-300',
-                )}
-                style={on ? { borderColor: color, color } : undefined}
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: on ? color : GREY_200 }}
+        {/* RIGHT: Weekly Line Graph */}
+        <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm lg:col-span-8 space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-extrabold text-ink">
+                ความเข้าใจรายหัวข้อ (รายสัปดาห์)
+              </h2>
+              <p className="text-xs text-grey-600 mt-0.5 font-medium">
+                เปรียบเทียบพัฒนาการความเข้าใจรายสัปดาห์แยกตามคณะ
+              </p>
+            </div>
+
+            {/* Interactive Filter Pills */}
+            <div className="flex flex-wrap gap-1.5">
+              {SERIES.map((s) => {
+                const active = visibleSeries[s.key] ?? false
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() =>
+                      setVisibleSeries((prev) => ({ ...prev, [s.key]: !prev[s.key] }))
+                    }
+                    className={cn(
+                      'rounded-full px-3 py-1 text-xs font-extrabold transition-all border cursor-pointer',
+                      active
+                        ? 'bg-paper shadow-2xs'
+                        : 'border-transparent bg-grey-100 text-grey-400 opacity-60'
+                    )}
+                    style={{
+                      borderColor: active ? s.color : undefined,
+                      color: active ? s.color : undefined,
+                    }}
+                  >
+                    {s.th}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="h-72 w-full pt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={weeklyData} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GREY_200} vertical={false} />
+                <XAxis dataKey="label" stroke="#888" tickLine={false} tick={{ fontSize: 11, fontWeight: 700 }} />
+                <YAxis domain={[0, 100]} stroke="#888" tickLine={false} tick={{ fontSize: 11 }} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const d = payload[0].payload
+                    return (
+                      <div className="rounded-2xl border border-grey-300 bg-paper p-3 shadow-xl text-xs space-y-1.5 font-bold">
+                        <p className="font-extrabold text-ink">
+                          สัปดาห์ {d.week} · {d.topic}
+                        </p>
+                        {payload.map((p) => (
+                          <div key={p.name} className="flex items-center justify-between gap-4">
+                            <span style={{ color: p.color }}>{p.name}:</span>
+                            <span className="font-black text-ink">{p.value}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  }}
                 />
-                {th}
+                {SERIES.map((s) =>
+                  visibleSeries[s.key] ? (
+                    <Line
+                      key={s.key}
+                      name={s.th}
+                      type="monotone"
+                      dataKey={s.key}
+                      stroke={s.color}
+                      strokeWidth={s.width}
+                      dot={{ r: 4, fill: s.color }}
+                      activeDot={{ r: 6 }}
+                    />
+                  ) : null
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 2: ASSIGNMENT & HOMEWORK TRACKER (โหมดเช็คการงาน การบ้าน แยกงาน) */}
+      <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-grey-300/40 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-pink-100 text-pink-600 font-bold">
+                <FileText className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="text-xl font-extrabold text-ink">
+                โหมดเช็คการงาน & การบ้าน (Assignment Tracker)
+              </h2>
+            </div>
+            <p className="text-xs text-grey-600 mt-1 font-medium">
+              ติดตามรายละเอียดยอดส่งงาน แยกตามภาระงาน บอกชัดเจนว่าใครขาดงานไหนและขาดกี่คะแนน
+            </p>
+          </div>
+
+          {/* Filter Pills for Assignments */}
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setSelectedAssignmentId('all')}
+              className={cn(
+                'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all border cursor-pointer',
+                selectedAssignmentId === 'all'
+                  ? 'border-pink-500 bg-pink-600 text-white shadow-xs'
+                  : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
+              )}
+            >
+              งานทั้งหมด (4 งาน)
+            </button>
+            {ASSIGNMENTS.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => setSelectedAssignmentId(a.id)}
+                className={cn(
+                  'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all border cursor-pointer',
+                  selectedAssignmentId === a.id
+                    ? 'border-pink-500 bg-pink-600 text-white shadow-xs'
+                    : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
+                )}
+              >
+                {a.code} ({a.fullScore} คะแนน)
               </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4 Assignment Cards Overview */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {ASSIGNMENTS.map((a) => {
+            const submittedCount = studentAssignmentData.filter(
+              ({ hw }) => !hw.missingHwIds.includes(a.id)
+            ).length
+            const isSelected = selectedAssignmentId === a.id
+
+            return (
+              <div
+                key={a.id}
+                onClick={() => setSelectedAssignmentId(a.id)}
+                className={cn(
+                  'rounded-2xl border p-4 transition-all cursor-pointer space-y-2',
+                  isSelected
+                    ? 'border-pink-500 bg-pink-50/40 ring-2 ring-pink-500/20 shadow-xs'
+                    : 'border-grey-300/60 bg-canvas hover:border-pink-300 hover:bg-paper'
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="rounded-lg bg-pink-100 px-2 py-0.5 font-extrabold text-pink-700 text-xs">
+                    {a.code}
+                  </span>
+                  <span className="text-xs font-bold text-grey-500">กำหนดส่ง {a.dueDate}</span>
+                </div>
+
+                <p className="text-sm font-extrabold text-ink line-clamp-1">{a.title}</p>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs font-bold text-grey-600">
+                    ส่งแล้ว <strong className="text-pink-600 font-extrabold">{submittedCount}</strong>/{students.length} คน
+                  </span>
+                  <span className="text-xs font-extrabold text-ink bg-paper border border-grey-300/60 px-2 py-0.5 rounded-md">
+                    {a.fullScore} คะแนน
+                  </span>
+                </div>
+              </div>
             )
           })}
         </div>
 
-        {/* faculty strengths & focus topics */}
-        <div className="mt-4 border-t border-grey-300/40 pt-4 space-y-2">
-          <p className="text-base font-bold text-ink flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-pink-600" />
-            <span>จุดแข็งรายคณะ & บทเรียนที่แต่ละคณะต้องเน้นย้ำ</span>
-          </p>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 pt-1">
-            {[
-              { faculty: 'Accounting', th: 'คณะการบัญชี', color: '#D12E80', best: 'Supply Chain (88%)', focus: "Hofstede's Cultural Dimensions (68%)" },
-              { faculty: 'Communication Arts', th: 'คณะนิเทศศาสตร์', color: '#0D9488', best: 'Cross-Cultural Comm (85%)', focus: 'Foreign Entry Modes (40%)' },
-              { faculty: 'Engineering', th: 'คณะวิศวกรรมศาสตร์', color: '#2563EB', best: 'Global Strategy (82%)', focus: "Int'l HRM (55%)" },
-              { faculty: 'Business Admin', th: 'คณะบริหารธุรกิจ', color: '#8B5CF6', best: 'Hofstede (80%)', focus: 'Supply Chain (58%)' },
-              { faculty: 'Digital Media', th: 'คณะดิจิทัลมีเดีย', color: '#F59E0B', best: 'Digital Marketing (86%)', focus: "Hofstede's Cultural Dimensions (40%)" },
-            ].map((item) => (
-              <div key={item.faculty} className="rounded-xl border border-grey-300/50 bg-canvas p-3 text-xs space-y-1">
-                <div className="flex items-center gap-2 font-bold text-ink">
-                  <span className="h-3 w-3 rounded-full shrink-0" style={{ background: item.color }} />
-                  <span>{item.th}</span>
-                </div>
-                <p className="text-emerald-700 font-semibold pl-5">
-                  ✓ ทำได้ดี: {item.best}
-                </p>
-                <p className="text-pink-600 font-bold pl-5">
-                  📌 ต้องเน้นบท: {item.focus}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* remediation action lives with the weakness it fixes */}
-        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-grey-300/40 pt-4">
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors cursor-pointer',
-              remediationSent
-                ? 'border border-pink-300 text-pink-600 hover:bg-pink-50'
-                : 'bg-pink-600 text-paper hover:bg-pink-500',
-            )}
-          >
-            {remediationSent ? `✓ ${t('remediationSentLabel')}` : `${t('sendRemediation')} →`}
-          </button>
-          <p className="text-sm text-grey-600">
-            วิธีแก้จะไปแสดงรายบุคคลในแท็บ "เรียน" ของนักศึกษา ไม่รกหน้าจอของอาจารย์
-          </p>
-        </div>
-      </div>
-
-      {/* faculty averages (vertical bars) + development */}
-      <div className="reveal grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-grey-300/50 bg-paper p-5 lg:col-span-2">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-ink">
-            <Search className="h-5 w-5 text-pink-600" />
-            <span>{t('facultyAverage')}</span>
-          </h2>
-          <p className="mt-0.5 text-sm text-grey-600">
-            Pre-test ล่าสุด · {topics.find((t) => t.id === 't2')?.title ?? 'Hofstede'}
-          </p>
-
-          <div className="mt-3 h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={facultyData} margin={{ top: 24, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke={GREY_200} strokeDasharray="4 4" />
-                <XAxis
-                  dataKey="shortName"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 14, fill: INK }}
-                />
-                <YAxis domain={[0, 100]} hide />
-                <Bar dataKey="percent" radius={[6, 6, 0, 0]} barSize={48} animationDuration={800}>
-                  {facultyData.map((entry) => {
-                    const matchColor = SERIES.find((s) => s.key === entry.faculty)?.color || '#D12E80'
-                    return (
-                      <Cell
-                        key={entry.faculty}
-                        fill={matchColor}
-                        strokeWidth={0}
-                      />
-                    )
-                  })}
-                  <LabelList
-                    dataKey="percent"
-                    position="top"
-                    formatter={(v: any) => `${v}%`}
-                    style={{ fill: INK, fontSize: 14, fontWeight: 600 }}
-                  />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-grey-300/50 bg-paper p-5">
-          <h2 className="text-lg font-bold text-ink">{t('avgGrowth')}</h2>
-          <p className="mt-0.5 text-sm text-grey-600">Pre-test → Post-test ต่อสัปดาห์</p>
-          <p className="mt-2 text-4xl font-bold text-pink-600">+{avgDelta} จุด</p>
-          <div className="mt-3 space-y-2">
-            {devRows.map((r) => (
-              <div
-                key={r.week}
-                className="flex items-center justify-between rounded-xl border border-grey-300/40 px-3 py-2.5"
-              >
-                <span className="text-[15px] font-medium text-ink">
-                  ส.{r.week} {r.topic}
-                </span>
-                {r.post !== null ? (
-                  <span className="text-[15px] text-grey-600">
-                    {r.pre}→{r.post}{' '}
-                    <span className="font-bold text-pink-600">+{r.post - r.pre}</span>
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-pink-50 px-2.5 py-1 text-xs font-semibold text-pink-600">
-                    {r.pre > 0 ? `${r.pre} → รอสอบหลังแก้` : 'รอ Pre-test'}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* pending + game ideas */}
-      <div className="reveal grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-grey-300/50 bg-paper p-5 lg:col-span-2">
+        {/* Detailed Table of Missing Students */}
+        <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-ink">{t('whoHasntSubmitted')}</h2>
-            <span className="rounded-full bg-pink-50 px-3 py-1 text-sm font-semibold text-pink-600">
-              {pending.length} คน
-            </span>
-          </div>
-
-          {/* auto reminder */}
-          <div className="mt-3 flex items-center justify-between rounded-xl bg-canvas px-4 py-3">
-            <div>
-              <p className="text-[15px] font-semibold text-ink">{t('autoRemind')}</p>
-              <p className="text-sm text-grey-600">เตือนซ้ำทุกวัน 18:00 จนกว่าจะส่งครบ</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={autoRemind}
-              onClick={() => {
-                const next = !autoRemind
-                setAutoRemind(next)
-                showToast(
-                  next
-                    ? 'เปิดเตือนอัตโนมัติแล้ว — ระบบจะเตือนทุกวัน 18:00 จนกว่าจะส่งครบ'
-                    : 'ปิดเตือนอัตโนมัติแล้ว',
-                )
-              }}
-              className={cn(
-                'relative h-7 w-12 shrink-0 rounded-full transition-colors',
-                autoRemind ? 'bg-pink-600' : 'bg-grey-200',
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-paper shadow transition-transform',
-                  autoRemind && 'translate-x-5',
-                )}
-              />
-            </button>
-          </div>
-
-          {pending.length === 0 ? (
-            <p className="mt-4 text-[15px] text-grey-600 flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span>นักศึกษาส่งครบทุกคนแล้ว</span>
-            </p>
-          ) : (
-            <ul className="mt-3 max-h-[264px] space-y-2 overflow-y-auto pr-1">
-              {pending.map((s) => (
-                <li
-                  key={s.id}
-                  className="flex items-center gap-3 rounded-xl border border-grey-300/40 px-3 py-2.5"
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-grey-100 text-[15px] font-semibold text-grey-600">
-                    {s.name.charAt(0)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-medium text-ink">
-                      {s.name} <span className="text-grey-600">({s.nickname})</span>
-                    </p>
-                    <span className="mt-0.5 inline-block rounded-full bg-grey-100 px-2 py-0.5 text-xs text-grey-600">
-                      {FACULTY_TH[s.faculty] ?? s.faculty}
-                    </span>
-                  </div>
-                  {remindedIds.has(s.id) ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-grey-300">
-                      <Check className="h-4 w-4" />
-                      {t('reminded')}
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => remindOne(s.id, s.nickname)}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-pink-300 px-3 py-2 text-sm font-medium text-pink-600 transition-colors hover:bg-pink-50"
-                    >
-                      <Send className="h-4 w-4" />
-                      {t('remind')}
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Automated Schedule Reminder Setter */}
-          <div className="mt-4 border-t border-grey-300/40 pt-3 space-y-2">
-            <p className="text-xs font-bold text-ink flex items-center gap-1.5">
-              <Clock className="h-4 w-4 text-pink-600" />
-              <span>ตั้งเวลาแจ้งเตือนอัตโนมัติ (Automated Reminder Schedule)</span>
-            </p>
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <input
-                type="date"
-                value={remDate}
-                onChange={(e) => setRemDate(e.target.value)}
-                className="rounded-xl border border-grey-300 bg-paper px-3 py-2 text-xs font-semibold outline-none focus:border-pink-500"
-              />
-              <input
-                type="time"
-                value={remTime}
-                onChange={(e) => setRemTime(e.target.value)}
-                className="rounded-xl border border-grey-300 bg-paper px-3 py-2 text-xs font-semibold outline-none focus:border-pink-500"
-              />
+            <h3 className="text-sm font-extrabold text-ink flex items-center gap-1.5">
+              <AlertCircle className="h-4 w-4 text-rose-500" />
+              <span>รายชื่อนักศึกษาที่ยังส่งงานไม่ครบ ({missingStudents.length} คน)</span>
+            </h3>
+            {missingStudents.length > 0 && (
               <button
                 type="button"
                 onClick={() => {
-                  setScheduledReminder({ date: remDate, time: remTime })
-                  showToast(`ตั้งเวลาเตือนวันที่ ${remDate} เวลา ${remTime} น. เรียบร้อยแล้ว`)
+                  missingStudents.forEach(({ student }) =>
+                    setRemindedIds((prev) => new Set(prev).add(student.id))
+                  )
+                  showToast(`ส่งข้อความเตือนรวม ${missingStudents.length} คนเรียบร้อยแล้ว!`)
                 }}
-                className="rounded-xl bg-pink-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-pink-700 transition-all cursor-pointer"
+                className="rounded-xl border border-pink-300 bg-pink-50 px-3 py-1.5 text-xs font-extrabold text-pink-700 hover:bg-pink-100 transition-colors cursor-pointer"
               >
-                ตั้งเวลาเตือนอัตโนมัติ
+                📲 สะกิดเตือนทุกคนที่ค้างงาน
               </button>
-            </div>
-            {scheduledReminder && (
-              <p className="text-xs font-bold text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span>ตั้งระบบเตือนอัตโนมัติแล้ว: วันที่ {scheduledReminder.date} เวลา {scheduledReminder.time} น.</span>
-              </p>
             )}
           </div>
-        </div>
 
-        <div className="space-y-6">
-          {/* Mini Leaderboard Card for Teacher */}
-          <div className="rounded-2xl border border-amber-300/80 bg-paper p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-amber-500 fill-amber-400" />
-                <span>มินิลีดเดอร์บอร์ด (นักศึกษาขยันสูงสุด)</span>
-              </h2>
-              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
-                Top 5
-              </span>
+          <div className="overflow-hidden rounded-2xl border border-grey-300/60 bg-paper">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold">
+                  <tr>
+                    <th className="py-3 px-4">นักศึกษา</th>
+                    <th className="py-3 px-4">คณะ</th>
+                    <th className="py-3 px-4">งานที่ยังไม่ได้ส่ง</th>
+                    <th className="py-3 px-4">ขาดคะแนนรวม</th>
+                    <th className="py-3 px-4">คะแนนสะสมปัจจุบัน</th>
+                    <th className="py-3 px-4 text-right">ดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-grey-300/30 font-medium">
+                  {missingStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-grey-500 font-bold">
+                        🎉 ส่งงานครบหมดทุกคนสำหรับรายการที่เลือก!
+                      </td>
+                    </tr>
+                  ) : (
+                    missingStudents.map(({ student: s, hw }) => {
+                      const isReminded = remindedIds.has(s.id)
+
+                      return (
+                        <tr key={s.id} className="hover:bg-pink-50/20 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 font-bold text-pink-700 text-xs shrink-0">
+                                {s.nickname.slice(0, 2)}
+                              </div>
+                              <div>
+                                <p className="font-extrabold text-ink">
+                                  {s.name} <span className="text-pink-600">"{s.nickname}"</span>
+                                </p>
+                                <p className="text-[10px] text-grey-500 font-mono">ID: {s.id}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <span className="rounded-md bg-pink-50 px-2 py-0.5 font-bold text-pink-600 border border-pink-200 text-[11px]">
+                              {s.faculty}
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <div className="flex flex-wrap gap-1">
+                              {hw.missingList.map((m) => (
+                                <span
+                                  key={m.id}
+                                  className="rounded bg-rose-100 text-rose-800 text-[11px] font-bold px-2 py-0.5 border border-rose-200"
+                                >
+                                  {m.code}: {m.title}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+
+                          <td className="py-3 px-4 font-black text-rose-600">
+                            -{hw.missingPoints} คะแนน
+                          </td>
+
+                          <td className="py-3 px-4 font-bold text-ink">
+                            <span className="text-sm font-black text-ink">{hw.totalScore}</span>
+                            <span className="text-grey-400 text-xs">/100</span>
+                          </td>
+
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => remindOne(s.id, s.nickname)}
+                              disabled={isReminded}
+                              className={cn(
+                                'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer',
+                                isReminded
+                                  ? 'bg-emerald-100 text-emerald-700 cursor-default'
+                                  : 'bg-pink-600 text-white shadow-xs hover:bg-pink-700'
+                              )}
+                            >
+                              {isReminded ? '✓ เตือนแล้ว' : '📲 สะกิดเตือน'}
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-            <p className="text-xs text-grey-600">
-              อัปเดตเรียลไทม์จากคะแนน XP และการตอบคำถามในคาบสด
-            </p>
-
-            <div className="space-y-2 pt-1">
-              {[
-                { rank: 1, name: 'ณัฐ', nickname: 'นัท', faculty: 'ดิจิทัลมีเดีย', xp: 240, streak: 5 },
-                { rank: 2, name: 'วรรณา', nickname: 'นุ้ย', faculty: 'การบัญชี', xp: 210, streak: 4 },
-                { rank: 3, name: 'ธีรวัฒน์', nickname: 'ต้น', faculty: 'วิศวกรรมศาสตร์', xp: 190, streak: 3 },
-                { rank: 4, name: 'พรรณี', nickname: 'พลอย', faculty: 'บริหารธุรกิจ', xp: 160, streak: 3 },
-                { rank: 5, name: 'สมชาย', nickname: 'แมน', faculty: 'นิเทศศาสตร์', xp: 140, streak: 2 },
-              ].map((st) => (
-                <div
-                  key={st.rank}
-                  className="flex items-center justify-between rounded-xl border border-grey-300/40 bg-canvas p-2.5 text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span
-                      className={cn(
-                        'flex h-6 w-6 items-center justify-center rounded-full font-bold text-xs shrink-0',
-                        st.rank === 1 && 'bg-amber-100 text-amber-800 border border-amber-300',
-                        st.rank === 2 && 'bg-slate-200 text-slate-700 border border-slate-300',
-                        st.rank === 3 && 'bg-amber-800/10 text-amber-900 border border-amber-700/20',
-                        st.rank > 3 && 'bg-paper text-grey-600 border border-grey-300/40'
-                      )}
-                    >
-                      {st.rank}
-                    </span>
-                    <div>
-                      <p className="font-bold text-ink">
-                        {st.name} <span className="text-pink-600">({st.nickname})</span>
-                      </p>
-                      <span className="text-[10px] text-grey-600">{st.faculty}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-md border border-orange-200">
-                      <Flame className="h-3 w-3 fill-orange-400" />
-                      {st.streak} วัน
-                    </span>
-                    <span className="flex items-center gap-1 font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
-                      <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
-                      {st.xp} XP
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Active Learning Activities Idea */}
-          <div className="rounded-2xl border border-grey-300/50 bg-paper p-5">
-            <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-pink-600" />
-              <span>แก้คาบน่าเบื่อด้วยกิจกรรม Active Learning</span>
-            </h2>
-            <p className="mt-0.5 text-sm text-grey-600">แทรกช่วงไหนของคาบได้บ้าง</p>
-            <div className="mt-3 space-y-2">
-              {generatedContent.activities.map((a) => (
-                <div key={a.name} className="rounded-xl border border-grey-300/40 px-3 py-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink">
-                      {a.name}
-                    </p>
-                    <span className="shrink-0 rounded-full bg-pink-50 px-2.5 py-0.5 text-xs font-semibold text-pink-600">
-                      {GAME_SLOT[a.format]} · {a.durationMin} นาที
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/teacher/studio')}
-              className="mt-3 w-full rounded-xl border border-pink-300 px-3 py-2.5 text-sm font-semibold text-pink-600 transition-colors hover:bg-pink-50 cursor-pointer"
-            >
-              ดูสคริปต์เกมเต็มในสตูดิโอ →
-            </button>
           </div>
         </div>
       </div>
 
-      {/* remediation sheet — teacher confirms, students receive */}
-      {sheetOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <button
-            type="button"
-            aria-label="ปิด"
-            onClick={() => setSheetOpen(false)}
-            className="absolute inset-0 bg-ink/30 animate-in fade-in duration-200"
-          />
-          <div className="relative flex h-full w-full max-w-md flex-col overflow-y-auto bg-paper p-6 shadow-xl animate-in slide-in-from-right duration-300">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-ink">ส่งชุดทบทวนรายบุคคล</h2>
-                <p className="mt-0.5 text-sm text-grey-600">
-                  ระบบจัดเนื้อหาให้ตามคะแนนของแต่ละคน — ไปแสดงในแท็บ "เรียน" ของนักศึกษา
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="ปิดแผง"
-                onClick={() => setSheetOpen(false)}
-                className="rounded-full p-1.5 text-grey-600 transition-colors hover:bg-pink-50 hover:text-pink-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      {/* SECTION 3: FACULTY STRENGTHS & GAP ANALYSIS */}
+      <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-4">
+        <h2 className="text-lg font-extrabold text-ink flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          <span>จุดแข็งรายคณะ & บทเรียนที่แต่ละคณะต้องเน้นย้ำ</span>
+        </h2>
 
-            <p className="mt-5 text-sm font-semibold uppercase tracking-wider text-grey-600">
-              ใครจะได้รับ
-            </p>
-            <div className="mt-2 rounded-2xl border border-pink-200 bg-pink-50 p-4">
-              <p className="text-[15px] font-bold text-ink">
-                {lowScorers.length} คนที่คะแนน Pre-test ต่ำกว่า 60%
-              </p>
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                {lowScorers.map((s) => (
-                  <span
-                    key={s.id}
-                    className="rounded-full border border-pink-200 bg-paper px-2.5 py-1 text-sm text-ink"
-                  >
-                    {s.nickname} · {FACULTY_TH[s.faculty] ?? s.faculty}
-                  </span>
-                ))}
-              </div>
-              {pending.length > 0 && (
-                <p className="mt-2.5 text-sm text-grey-600">
-                  อีก {pending.length} คนที่ยังไม่ส่ง จะได้รับแจ้งเตือนให้ทำ Pre-test ก่อน
-                </p>
-              )}
-            </div>
-
-            <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-grey-600">
-              ในชุดทบทวนมี
-            </p>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-3 rounded-xl border border-grey-300/50 px-3.5 py-3">
-                <Clock className="h-4 w-4 shrink-0 text-pink-600" />
-                <p className="min-w-0 flex-1 text-[15px] font-medium text-ink">
-                  {remediation.pairingActivity.name}
-                </p>
-                <span className="shrink-0 rounded-full bg-pink-50 px-2.5 py-0.5 text-xs font-semibold text-pink-600">
-                  ในคาบหน้า · {remediation.pairingActivity.durationMin} นาที
-                </span>
-              </div>
-              {remediation.resources.map((r) => (
-                <div
-                  key={r.title}
-                  className="flex items-center gap-3 rounded-xl border border-grey-300/50 px-3.5 py-3"
-                >
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-pink-500" />
-                  <p className="min-w-0 flex-1 truncate text-[15px] text-ink">{r.title}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              disabled={remediationSent}
-              onClick={confirmRemediation}
-              className={cn(
-                'mt-6 w-full rounded-xl px-4 py-3 text-[15px] font-semibold transition-colors',
-                remediationSent
-                  ? 'cursor-not-allowed bg-grey-100 text-grey-300'
-                  : 'bg-pink-600 text-paper hover:bg-pink-500',
-              )}
-            >
-              {remediationSent ? 'ส่งแล้ว ✓' : `ยืนยันส่งให้ ${lowScorers.length} คน`}
-            </button>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl bg-canvas p-4 border border-grey-300/40 space-y-1">
+            <p className="text-xs font-bold text-pink-600">คณะการบัญชี</p>
+            <p className="text-xs font-extrabold text-ink">✓ ทำได้ดี: Supply Chain (88%)</p>
+            <p className="text-xs text-grey-500 font-medium">⚠️ ควรเน้นย้ำ: Cross-Cultural Comm</p>
+          </div>
+          <div className="rounded-2xl bg-canvas p-4 border border-grey-300/40 space-y-1">
+            <p className="text-xs font-bold text-teal-600">คณะนิเทศศาสตร์</p>
+            <p className="text-xs font-extrabold text-ink">✓ ทำได้ดี: Cross-Cultural Comm (85%)</p>
+            <p className="text-xs text-grey-500 font-medium">⚠️ ควรเน้นย้ำ: Entry Modes & Financials</p>
+          </div>
+          <div className="rounded-2xl bg-canvas p-4 border border-grey-300/40 space-y-1">
+            <p className="text-xs font-bold text-blue-600">คณะวิศวกรรมศาสตร์</p>
+            <p className="text-xs font-extrabold text-ink">✓ ทำได้ดี: Global Strategy (82%)</p>
+            <p className="text-xs text-grey-500 font-medium">⚠️ ควรเน้นย้ำ: CSR & Soft Skills</p>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* toast */}
+      {/* Floating Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[60] flex max-w-sm items-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm text-paper shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-pink-300" />
-          {toast}
+        <div className="fixed bottom-6 right-6 z-[60] flex max-w-sm items-center gap-2.5 rounded-2xl bg-ink px-5 py-3.5 text-xs font-bold text-paper shadow-2xl animate-bounce">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-pink-400" />
+          <span>{toast}</span>
+          <button type="button" onClick={() => setToast(null)} className="ml-2 text-grey-400 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>

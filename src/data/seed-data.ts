@@ -806,3 +806,70 @@ export const COMMUNITY_POSTS: CommunityPost[] = [
     createdAt: '2 วัน ที่แล้ว',
   },
 ]
+
+/* ----------------------------------------------------------- assignments -- */
+
+export type CourseAssignment = {
+  id: string
+  code: string
+  title: string
+  fullScore: number
+  dueDate: string
+  category: 'quiz' | 'homework' | 'project'
+}
+
+export const ASSIGNMENTS: CourseAssignment[] = [
+  {
+    id: 'a1',
+    code: 'HW-1',
+    title: 'Pre-test สัปดาห์ที่ 1 (Globalisation)',
+    fullScore: 10,
+    dueDate: '05 ส.ค.',
+    category: 'quiz',
+  },
+  {
+    id: 'a2',
+    code: 'HW-2',
+    title: '3D Flashcards & Case Study (Hofstede)',
+    fullScore: 20,
+    dueDate: '12 ส.ค.',
+    category: 'homework',
+  },
+  {
+    id: 'a3',
+    code: 'HW-3',
+    title: 'Post-test Hofstede (วัดผลหลังเรียน)',
+    fullScore: 20,
+    dueDate: '15 ส.ค.',
+    category: 'quiz',
+  },
+  {
+    id: 'a4',
+    code: 'HW-4',
+    title: 'รายงานกลุ่ม ธุรกิจข้ามชาติ (Entry Modes)',
+    fullScore: 50,
+    dueDate: '18 ส.ค.',
+    category: 'project',
+  },
+]
+
+export function getStudentAssignments(_studentId: string, avatarSeed: number) {
+  const missingHwIds: string[] = []
+  if (avatarSeed % 5 === 1) missingHwIds.push('a4')
+  if (avatarSeed % 5 === 3) missingHwIds.push('a3', 'a4')
+  if (avatarSeed % 5 === 0 && avatarSeed > 10) missingHwIds.push('a2')
+
+  const missingList = ASSIGNMENTS.filter((a) => missingHwIds.includes(a.id))
+  const missingPoints = missingList.reduce((sum, a) => sum + a.fullScore, 0)
+  const totalScore = 100 - missingPoints
+
+  return {
+    missingHwIds,
+    missingList,
+    missingCount: missingHwIds.length,
+    missingPoints,
+    totalScore,
+    isComplete: missingHwIds.length === 0,
+  }
+}
+
