@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   CartesianGrid,
   Line,
@@ -9,11 +10,17 @@ import {
   YAxis,
 } from 'recharts'
 import {
-  AlertCircle,
+  Calendar as CalendarIcon,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   FileDown,
   FileText,
   PieChart as PieIcon,
+  Plus,
+  Trophy,
+  Users,
   X,
 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
@@ -64,6 +71,122 @@ const SERIES = [
   { key: 'Communication Arts', th: 'นิเทศศาสตร์', color: '#0D9488', width: 2.5 },
 ] as const
 
+/* -------------------------------------------------- MiniCalendar Component -- */
+
+function MiniCalendar({
+  onSelectDate,
+}: {
+  onSelectDate?: (date: number) => void
+}) {
+  const [selectedDay, setSelectedDay] = useState(16)
+  const daysInMonth = 31
+  const startDayOffset = 5 // Saturday start for Aug 2026
+
+  const deadlineDays: Record<number, { title: string; color: string; badge: string }> = {
+    12: { title: 'HW-2: 3D Flashcards', color: 'bg-emerald-500', badge: 'ปานกลาง' },
+    15: { title: 'HW-3: Post-test Hofstede', color: 'bg-amber-500', badge: 'สำคัญ' },
+    18: { title: 'HW-4: รายงานกลุ่ม ธุรกิจข้ามชาติ', color: 'bg-rose-500', badge: 'ด่วนที่สุด' },
+    20: { title: 'คาบเรียนสด Live Quiz สัปดาห์ที่ 3', color: 'bg-purple-500', badge: 'คาบสด' },
+  }
+
+  const grid = []
+  for (let i = 0; i < startDayOffset; i++) grid.push(null)
+  for (let d = 1; d <= daysInMonth; d++) grid.push(d)
+
+  return (
+    <div className="rounded-3xl border border-grey-300/60 bg-paper p-5 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5 text-pink-600" />
+          <h3 className="text-base font-extrabold text-ink">ปฏิทินกำหนดส่งงาน</h3>
+        </div>
+        <div className="flex items-center gap-1">
+          <button type="button" className="p-1 text-grey-400 hover:text-ink transition-colors">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-xs font-extrabold text-pink-600 bg-pink-50 px-2.5 py-1 rounded-xl border border-pink-200">
+            สิงหาคม 2026
+          </span>
+          <button type="button" className="p-1 text-grey-400 hover:text-ink transition-colors">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Weekday Labels */}
+      <div className="grid grid-cols-7 text-center text-[11px] font-extrabold text-grey-400">
+        <span>จ</span>
+        <span>อ</span>
+        <span>พ</span>
+        <span>พฤ</span>
+        <span>ศ</span>
+        <span>ส</span>
+        <span>อา</span>
+      </div>
+
+      {/* Days Grid */}
+      <div className="grid grid-cols-7 gap-1 text-center text-xs">
+        {grid.map((day, idx) => {
+          if (day === null) {
+            return <div key={`empty-${idx}`} className="h-8 w-8" />
+          }
+          const isToday = day === 16
+          const isSelected = day === selectedDay
+          const hasDeadline = deadlineDays[day]
+
+          return (
+            <button
+              key={day}
+              type="button"
+              onClick={() => {
+                setSelectedDay(day)
+                if (onSelectDate) onSelectDate(day)
+              }}
+              className={cn(
+                'relative flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold transition-all mx-auto cursor-pointer',
+                isSelected
+                  ? 'bg-pink-600 text-white shadow-md shadow-pink-600/30 font-extrabold scale-105'
+                  : isToday
+                  ? 'bg-pink-100 text-pink-700 font-extrabold border border-pink-300'
+                  : 'text-ink hover:bg-canvas'
+              )}
+            >
+              <span>{day}</span>
+              {hasDeadline && !isSelected && (
+                <span
+                  className={cn(
+                    'absolute bottom-1 h-1.5 w-1.5 rounded-full',
+                    hasDeadline.color
+                  )}
+                />
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Selected Day Event Box */}
+      {deadlineDays[selectedDay] ? (
+        <div className="rounded-2xl bg-pink-50/80 p-3 border border-pink-200 text-xs flex items-center justify-between animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', deadlineDays[selectedDay].color)} />
+            <span className="font-extrabold text-pink-700 line-clamp-1">
+              {deadlineDays[selectedDay].title}
+            </span>
+          </div>
+          <span className="text-[10px] font-extrabold text-pink-600 bg-paper px-2 py-0.5 rounded-md border border-pink-300 shrink-0">
+            {selectedDay} ส.ค.
+          </span>
+        </div>
+      ) : (
+        <p className="text-[11px] text-grey-500 text-center py-1 font-medium">
+          คลิกวันที่ในปฏิทินเพื่อดูภาระงานที่ต้องส่ง
+        </p>
+      )}
+    </div>
+  )
+}
+
 /* -------------------------------------------------- MultiRingChart Component -- */
 
 function MultiRingChart({
@@ -78,31 +201,31 @@ function MultiRingChart({
   submissionCount?: string
 }) {
   const rings = [
-    { label: 'ส่งแล้ว', pct: submissionPct, value: submissionCount, color: '#D12E80', bg: '#FCE7F3', r: 72, strokeWidth: 10 },
-    { label: 'มีส่วนร่วมในคลาส', pct: participationPct, value: `${participationPct}%`, color: '#8B5CF6', bg: '#EDE9FE', r: 56, strokeWidth: 10 },
-    { label: 'ความเข้าใจเฉลี่ย', pct: comprehensionPct, value: `${comprehensionPct}%`, color: '#0D9488', bg: '#CCFBF1', r: 40, strokeWidth: 10 },
+    { label: 'ส่งแล้ว', pct: submissionPct, value: submissionCount, color: '#D12E80', bg: '#FCE7F3', r: 65, strokeWidth: 9 },
+    { label: 'มีส่วนร่วม', pct: participationPct, value: `${participationPct}%`, color: '#8B5CF6', bg: '#EDE9FE', r: 50, strokeWidth: 9 },
+    { label: 'ความเข้าใจ', pct: comprehensionPct, value: `${comprehensionPct}%`, color: '#0D9488', bg: '#CCFBF1', r: 35, strokeWidth: 9 },
   ]
 
   return (
-    <div className="flex flex-col items-center justify-between h-full p-2">
-      <div className="relative flex items-center justify-center w-56 h-56 my-2">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 180 180">
+    <div className="flex flex-col items-center justify-center h-full p-1">
+      <div className="relative flex items-center justify-center w-48 h-48 my-1">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
           {rings.map((ring) => {
             const circumference = 2 * Math.PI * ring.r
             const offset = circumference - (ring.pct / 100) * circumference
             return (
               <g key={ring.label}>
                 <circle
-                  cx="90"
-                  cy="90"
+                  cx="80"
+                  cy="80"
                   r={ring.r}
                   fill="none"
                   stroke={ring.bg}
                   strokeWidth={ring.strokeWidth}
                 />
                 <circle
-                  cx="90"
-                  cy="90"
+                  cx="80"
+                  cy="80"
                   r={ring.r}
                   fill="none"
                   stroke={ring.color}
@@ -118,19 +241,19 @@ function MultiRingChart({
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-3xl font-black text-ink">{submissionPct}%</span>
-          <span className="text-[11px] font-extrabold text-pink-600 uppercase tracking-wide mt-0.5">ภาพรวมการเรียน</span>
+          <span className="text-2xl font-black text-ink">{submissionPct}%</span>
+          <span className="text-[10px] font-extrabold text-pink-600 uppercase tracking-wide">ภาพรวม</span>
         </div>
       </div>
 
-      <div className="w-full space-y-2 mt-2">
+      <div className="w-full space-y-1.5 mt-1">
         {rings.map((ring) => (
-          <div key={ring.label} className="flex items-center justify-between rounded-2xl bg-canvas px-3.5 py-2.5 border border-grey-300/40">
-            <div className="flex items-center gap-2.5">
-              <span className="h-3.5 w-3.5 rounded-full shrink-0 shadow-2xs" style={{ backgroundColor: ring.color }} />
-              <span className="text-xs font-extrabold text-ink">{ring.label}</span>
+          <div key={ring.label} className="flex items-center justify-between rounded-xl bg-canvas px-3 py-1.5 border border-grey-300/40 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: ring.color }} />
+              <span className="font-extrabold text-ink">{ring.label}</span>
             </div>
-            <span className="text-xs font-black" style={{ color: ring.color }}>{ring.value} ({ring.pct}%)</span>
+            <span className="font-black" style={{ color: ring.color }}>{ring.value}</span>
           </div>
         ))}
       </div>
@@ -141,6 +264,7 @@ function MultiRingChart({
 /* ---------------------------------------------------------------- page ---- */
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const revealRef = useReveal(true)
   const {
     course,
@@ -154,7 +278,7 @@ export default function Dashboard() {
 
   const [toast, setToast] = useState<string | null>(null)
   const [remindedIds, setRemindedIds] = useState<Set<string>>(new Set())
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('all')
+  const [taskCategory, setTaskCategory] = useState<string>('all')
   const [visibleSeries, setVisibleSeries] = useState<Record<string, boolean>>({
     class: true,
     Accounting: true,
@@ -222,7 +346,6 @@ export default function Dashboard() {
     })
   }, [facultyData, topics, hasData, liveAverage])
 
-  // Derive assignment completion stats for each student
   const studentAssignmentData = useMemo(() => {
     return students.map((s) => {
       const hw = getStudentAssignments(s.id, s.avatarSeed)
@@ -233,16 +356,11 @@ export default function Dashboard() {
     })
   }, [students])
 
-  // Filter missing students based on selected assignment filter
   const missingStudents = useMemo(() => {
     return studentAssignmentData
-      .filter(({ hw }) => {
-        if (hw.isComplete) return false
-        if (selectedAssignmentId === 'all') return true
-        return hw.missingHwIds.includes(selectedAssignmentId)
-      })
+      .filter(({ hw }) => !hw.isComplete)
       .sort((a, b) => b.hw.missingPoints - a.hw.missingPoints)
-  }, [studentAssignmentData, selectedAssignmentId])
+  }, [studentAssignmentData])
 
   const submissionPct = Math.round((getSubmissionCount() / students.length) * 100)
   const participationPct = getParticipationRate()
@@ -250,369 +368,377 @@ export default function Dashboard() {
 
   const remindOne = (id: string, nickname: string) => {
     setRemindedIds((prev) => new Set(prev).add(id))
-    showToast(`ส่งข้อความเตือนถึงคุณ${nickname} ผ่านระบบแจ้งเตือนเรียบร้อยแล้ว`)
+    showToast(`ส่งข้อความเตือนถึงคุณ${nickname} ผ่านระบบเรียบร้อยแล้ว`)
   }
 
   return (
     <div ref={revealRef} className="mx-auto max-w-7xl space-y-6 pb-16">
-      {/* Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-grey-300/40 pb-4">
+      {/* Top Greeting Header Row (Ref Matched) */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight">
-            แดชบอร์ดภาพรวมการเรียน (Analytics Dashboard)
+          <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight flex items-center gap-2">
+            <span>ยินดีต้อนรับกลับครับ, อาจารย์! 👋</span>
           </h1>
           <p className="text-sm font-medium text-grey-600 mt-0.5">
-            {course.code} · {course.name}
+            {course.code} · {course.name} (ภาคเรียนที่ 1/2569)
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => showToast('ส่งออกรายงานสรุปย่อ PDF เรียบร้อยแล้ว!')}
-          className="inline-flex items-center gap-2 rounded-2xl border border-grey-300/80 bg-paper px-4 py-2 text-xs font-bold text-ink shadow-xs hover:border-pink-300 hover:text-pink-600 transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <FileDown className="h-4 w-4" />
-          <span>ส่งออกรายงาน PDF</span>
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => showToast('ส่งออกรายงาน PDF เรียบร้อยแล้ว!')}
+            className="inline-flex items-center gap-1.5 rounded-2xl border border-grey-300/80 bg-paper px-4 py-2.5 text-xs font-extrabold text-ink shadow-xs hover:border-pink-300 hover:text-pink-600 transition-all cursor-pointer"
+          >
+            <FileDown className="h-4 w-4" />
+            <span>ส่งออก PDF</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/teacher/studio')}
+            className="inline-flex items-center gap-2 rounded-2xl bg-pink-600 px-5 py-2.5 text-xs font-extrabold text-white shadow-md shadow-pink-600/30 hover:bg-pink-700 transition-all cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>+ สร้างสื่อการเรียน</span>
+          </button>
+        </div>
       </div>
 
-      {/* SECTION 1: TOP ROW — Multi-ring Circle (Left) & Weekly Graph (Right) */}
+      {/* TOP 4 PASTEL STAT CARDS ROW (Ref Layout Matched) */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Purple */}
+        <div className="rounded-3xl border border-purple-200/80 bg-purple-50/50 p-5 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs font-extrabold text-purple-700 uppercase tracking-wider">
+              นักศึกษาทั้งหมด
+            </span>
+            <p className="text-3xl font-black text-ink">{students.length} คน</p>
+            <span className="text-[11px] font-bold text-emerald-600">↑ 12% จากเทอมก่อน</span>
+          </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 shadow-2xs">
+            <Users className="h-7 w-7" />
+          </div>
+        </div>
+
+        {/* Card 2: Green/Emerald */}
+        <div className="rounded-3xl border border-emerald-200/80 bg-emerald-50/50 p-5 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
+              ส่งงานเรียบร้อย
+            </span>
+            <p className="text-3xl font-black text-ink">{getSubmissionCount()} คน</p>
+            <span className="text-[11px] font-bold text-emerald-600">↑ 88% จากในคลาส</span>
+          </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 shadow-2xs">
+            <CheckCircle2 className="h-7 w-7" />
+          </div>
+        </div>
+
+        {/* Card 3: Amber/Yellow */}
+        <div className="rounded-3xl border border-amber-200/80 bg-amber-50/50 p-5 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs font-extrabold text-amber-700 uppercase tracking-wider">
+              ค้างส่งงาน
+            </span>
+            <p className="text-3xl font-black text-ink">{missingStudents.length} คน</p>
+            <span className="text-[11px] font-bold text-rose-600">↓ ขาด 70 คะแนนรวม</span>
+          </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 shadow-2xs">
+            <Clock className="h-7 w-7" />
+          </div>
+        </div>
+
+        {/* Card 4: Pink */}
+        <div className="rounded-3xl border border-pink-200/80 bg-pink-50/50 p-5 shadow-xs flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-xs font-extrabold text-pink-700 uppercase tracking-wider">
+              คะแนนเฉลี่ยคลาส
+            </span>
+            <p className="text-3xl font-black text-pink-600">{liveAverage}%</p>
+            <span className="text-[11px] font-bold text-emerald-600">↑ 5% สัปดาห์นี้</span>
+          </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 shadow-2xs">
+            <Trophy className="h-7 w-7" />
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN 2-COLUMN GRID: Left (8 Cols) vs Right Sidebar (4 Cols) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* LEFT: Multi-ring Circular Progress Chart */}
-        <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm lg:col-span-4 flex flex-col justify-between">
-          <div>
-            <h2 className="text-lg font-extrabold text-ink flex items-center gap-2">
-              <PieIcon className="h-5 w-5 text-pink-600" />
-              <span>สรุปภาพรวมการเรียน</span>
-            </h2>
-            <p className="text-xs text-grey-600 mt-0.5 font-medium">
-              สถิติการส่งงาน การมีส่วนร่วม และคะแนนเฉลี่ย
-            </p>
-          </div>
+        {/* LEFT COLUMN (8 Cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Card A: My Class Tasks & Assignment Table (Scrollable Ref Layout) */}
+          <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-grey-300/40 pb-3">
+              <div>
+                <h2 className="text-lg font-extrabold text-ink">
+                  ภาระงาน & ติดตามรายชื่อนักศึกษาค้างส่ง
+                </h2>
+                <p className="text-xs text-grey-600 mt-0.5 font-medium">
+                  รายการการบ้าน และรายชื่อนักศึกษาที่ต้องสะกิดเตือน
+                </p>
+              </div>
 
-          <MultiRingChart
-            submissionPct={submissionPct}
-            participationPct={participationPct}
-            comprehensionPct={comprehensionPct}
-            submissionCount={`${getSubmissionCount()}/${students.length}`}
-          />
-        </div>
-
-        {/* RIGHT: Weekly Line Graph */}
-        <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm lg:col-span-8 space-y-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-extrabold text-ink">
-                ความเข้าใจรายหัวข้อ (รายสัปดาห์)
-              </h2>
-              <p className="text-xs text-grey-600 mt-0.5 font-medium">
-                เปรียบเทียบพัฒนาการความเข้าใจรายสัปดาห์แยกตามคณะ
-              </p>
+              {/* Task Category Tabs */}
+              <div className="flex items-center gap-1 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setTaskCategory('all')}
+                  className={cn(
+                    'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer',
+                    taskCategory === 'all'
+                      ? 'bg-pink-600 text-white shadow-xs'
+                      : 'bg-canvas text-grey-600 hover:text-ink'
+                  )}
+                >
+                  ทั้งหมด
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTaskCategory('missing')}
+                  className={cn(
+                    'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer',
+                    taskCategory === 'missing'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'bg-canvas text-grey-600 hover:text-ink'
+                  )}
+                >
+                  ค้างส่ง ({missingStudents.length})
+                </button>
+              </div>
             </div>
 
-            {/* Interactive Filter Pills */}
-            <div className="flex flex-wrap gap-1.5">
-              {SERIES.map((s) => {
-                const active = visibleSeries[s.key] ?? false
-                return (
-                  <button
-                    key={s.key}
-                    type="button"
-                    onClick={() =>
-                      setVisibleSeries((prev) => ({ ...prev, [s.key]: !prev[s.key] }))
-                    }
-                    className={cn(
-                      'rounded-full px-3 py-1 text-xs font-extrabold transition-all border cursor-pointer',
-                      active
-                        ? 'bg-paper shadow-2xs'
-                        : 'border-transparent bg-grey-100 text-grey-400 opacity-60'
+            {/* Scrollable Table Matching Ref Layout */}
+            <div className="overflow-hidden rounded-2xl border border-grey-300/60 bg-paper shadow-2xs">
+              <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold sticky top-0 z-10 shadow-2xs">
+                    <tr>
+                      <th className="py-3 px-4">นักศึกษา</th>
+                      <th className="py-3 px-4">คณะ</th>
+                      <th className="py-3 px-4">งานที่ค้างส่ง</th>
+                      <th className="py-3 px-4">ขาดคะแนน</th>
+                      <th className="py-3 px-4 text-right">ดำเนินการ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-grey-300/30 font-medium">
+                    {missingStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-grey-500 font-bold">
+                          🎉 ส่งงานครบทุกคนเรียบร้อยแล้ว!
+                        </td>
+                      </tr>
+                    ) : (
+                      missingStudents.map(({ student: s, hw }) => {
+                        const isReminded = remindedIds.has(s.id)
+                        return (
+                          <tr key={s.id} className="hover:bg-pink-50/20 transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 font-extrabold text-pink-700 text-xs shrink-0">
+                                  {s.nickname.slice(0, 2)}
+                                </div>
+                                <div>
+                                  <p className="font-extrabold text-ink">
+                                    {s.name} <span className="text-pink-600">"{s.nickname}"</span>
+                                  </p>
+                                  <p className="text-[10px] text-grey-500 font-mono">ID: {s.id}</p>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <span className="rounded-md bg-pink-50 px-2 py-0.5 font-bold text-pink-600 border border-pink-200 text-[11px] whitespace-nowrap">
+                                {s.faculty}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <div className="flex flex-wrap gap-1">
+                                {hw.missingList.map((m) => (
+                                  <span
+                                    key={m.id}
+                                    className="rounded bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 border border-rose-200 whitespace-nowrap"
+                                  >
+                                    {m.code}: {m.title.split('(')[0].trim()}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-4 font-black text-rose-600 whitespace-nowrap">
+                              -{hw.missingPoints} คะแนน
+                            </td>
+
+                            <td className="py-3 px-4 text-right whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => remindOne(s.id, s.nickname)}
+                                disabled={isReminded}
+                                className={cn(
+                                  'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer',
+                                  isReminded
+                                    ? 'bg-emerald-100 text-emerald-700 cursor-default'
+                                    : 'bg-pink-600 text-white shadow-xs hover:bg-pink-700'
+                                )}
+                              >
+                                {isReminded ? '✓ เตือนแล้ว' : '📲 สะกิดเตือน'}
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })
                     )}
-                    style={{
-                      borderColor: active ? s.color : undefined,
-                      color: active ? s.color : undefined,
-                    }}
-                  >
-                    {s.th}
-                  </button>
-                )
-              })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
-          <div className="h-72 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weeklyData} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GREY_200} vertical={false} />
-                <XAxis dataKey="label" stroke="#888" tickLine={false} tick={{ fontSize: 11, fontWeight: 700 }} />
-                <YAxis domain={[0, 100]} stroke="#888" tickLine={false} tick={{ fontSize: 11 }} />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (!active || !payload?.length) return null
-                    const d = payload[0].payload
-                    return (
-                      <div className="rounded-2xl border border-grey-300 bg-paper p-3 shadow-xl text-xs space-y-1.5 font-bold">
-                        <p className="font-extrabold text-ink">
-                          สัปดาห์ {d.week} · {d.topic}
-                        </p>
-                        {payload.map((p) => (
-                          <div key={p.name} className="flex items-center justify-between gap-4">
-                            <span style={{ color: p.color }}>{p.name}:</span>
-                            <span className="font-black text-ink">{p.value}%</span>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  }}
-                />
-                {SERIES.map((s) =>
-                  visibleSeries[s.key] ? (
-                    <Line
-                      key={s.key}
-                      name={s.th}
-                      type="monotone"
-                      dataKey={s.key}
-                      stroke={s.color}
-                      strokeWidth={s.width}
-                      dot={{ r: 4, fill: s.color }}
-                      activeDot={{ r: 6 }}
-                    />
-                  ) : null
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 2: ASSIGNMENT & HOMEWORK TRACKER (โหมดเช็คการงาน การบ้าน แยกงาน) */}
-      <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-grey-300/40 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-pink-100 text-pink-600 font-bold">
-                <FileText className="h-4.5 w-4.5" />
-              </span>
-              <h2 className="text-xl font-extrabold text-ink">
-                โหมดเช็คการงาน & การบ้าน (Assignment Tracker)
-              </h2>
-            </div>
-            <p className="text-xs text-grey-600 mt-1 font-medium">
-              ติดตามรายละเอียดยอดส่งงาน แยกตามภาระงาน บอกชัดเจนว่าใครขาดงานไหนและขาดกี่คะแนน
-            </p>
-          </div>
-
-          {/* Filter Pills for Assignments */}
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => setSelectedAssignmentId('all')}
-              className={cn(
-                'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all border cursor-pointer',
-                selectedAssignmentId === 'all'
-                  ? 'border-pink-500 bg-pink-600 text-white shadow-xs'
-                  : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
-              )}
-            >
-              งานทั้งหมด (4 งาน)
-            </button>
-            {ASSIGNMENTS.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => setSelectedAssignmentId(a.id)}
-                className={cn(
-                  'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all border cursor-pointer',
-                  selectedAssignmentId === a.id
-                    ? 'border-pink-500 bg-pink-600 text-white shadow-xs'
-                    : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
-                )}
-              >
-                {a.code} ({a.fullScore} คะแนน)
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 4 Assignment Cards Overview */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {ASSIGNMENTS.map((a) => {
-            const submittedCount = studentAssignmentData.filter(
-              ({ hw }) => !hw.missingHwIds.includes(a.id)
-            ).length
-            const isSelected = selectedAssignmentId === a.id
-
-            return (
-              <div
-                key={a.id}
-                onClick={() => setSelectedAssignmentId(a.id)}
-                className={cn(
-                  'rounded-2xl border p-4 transition-all cursor-pointer space-y-2',
-                  isSelected
-                    ? 'border-pink-500 bg-pink-50/40 ring-2 ring-pink-500/20 shadow-xs'
-                    : 'border-grey-300/60 bg-canvas hover:border-pink-300 hover:bg-paper'
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="rounded-lg bg-pink-100 px-2 py-0.5 font-extrabold text-pink-700 text-xs">
-                    {a.code}
-                  </span>
-                  <span className="text-xs font-bold text-grey-500">กำหนดส่ง {a.dueDate}</span>
+          {/* Card B: Tasks Overview (Weekly Line Graph Left + MultiRing Right) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            {/* Weekly Line Graph (8 Cols) */}
+            <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm md:col-span-8 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-extrabold text-ink">ความเข้าใจรายสัปดาห์</h3>
+                  <p className="text-xs text-grey-600 font-medium">พัฒนาการแบ่งตามคณะวิชา</p>
                 </div>
-
-                <p className="text-sm font-extrabold text-ink line-clamp-1">{a.title}</p>
-
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-bold text-grey-600">
-                    ส่งแล้ว <strong className="text-pink-600 font-extrabold">{submittedCount}</strong>/{students.length} คน
-                  </span>
-                  <span className="text-xs font-extrabold text-ink bg-paper border border-grey-300/60 px-2 py-0.5 rounded-md">
-                    {a.fullScore} คะแนน
-                  </span>
+                <div className="flex flex-wrap gap-1">
+                  {SERIES.slice(0, 3).map((s) => (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => setVisibleSeries((prev) => ({ ...prev, [s.key]: !prev[s.key] }))}
+                      className={cn(
+                        'rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border cursor-pointer',
+                        visibleSeries[s.key] ? 'bg-paper shadow-2xs' : 'opacity-40'
+                      )}
+                      style={{ color: s.color, borderColor: s.color }}
+                    >
+                      {s.th}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )
-          })}
-        </div>
 
-        {/* Detailed Table of Missing Students */}
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-ink flex items-center gap-1.5">
-              <AlertCircle className="h-4 w-4 text-rose-500" />
-              <span>รายชื่อนักศึกษาที่ยังส่งงานไม่ครบ ({missingStudents.length} คน)</span>
-            </h3>
-            {missingStudents.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  missingStudents.forEach(({ student }) =>
-                    setRemindedIds((prev) => new Set(prev).add(student.id))
-                  )
-                  showToast(`ส่งข้อความเตือนรวม ${missingStudents.length} คนเรียบร้อยแล้ว!`)
-                }}
-                className="rounded-xl border border-pink-300 bg-pink-50 px-3 py-1.5 text-xs font-extrabold text-pink-700 hover:bg-pink-100 transition-colors cursor-pointer"
-              >
-                📲 สะกิดเตือนทุกคนที่ค้างงาน
-              </button>
-            )}
-          </div>
-
-          <div className="overflow-hidden rounded-2xl border border-grey-300/60 bg-paper shadow-xs">
-            <div className="overflow-x-auto max-h-[340px] overflow-y-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold sticky top-0 z-10 shadow-2xs">
-                  <tr>
-                    <th className="py-3 px-4">นักศึกษา</th>
-                    <th className="py-3 px-4">คณะ</th>
-                    <th className="py-3 px-4">งานที่ยังไม่ได้ส่ง</th>
-                    <th className="py-3 px-4">ขาดคะแนนรวม</th>
-                    <th className="py-3 px-4">คะแนนสะสมปัจจุบัน</th>
-                    <th className="py-3 px-4 text-right">ดำเนินการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-grey-300/30 font-medium">
-                  {missingStudents.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-grey-500 font-bold">
-                        🎉 ส่งงานครบหมดทุกคนสำหรับรายการที่เลือก!
-                      </td>
-                    </tr>
-                  ) : (
-                    missingStudents.map(({ student: s, hw }) => {
-                      const isReminded = remindedIds.has(s.id)
-
-                      return (
-                        <tr key={s.id} className="hover:bg-pink-50/20 transition-colors">
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2.5">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 font-bold text-pink-700 text-xs shrink-0">
-                                {s.nickname.slice(0, 2)}
+              <div className="h-56 w-full pt-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={weeklyData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GREY_200} vertical={false} />
+                    <XAxis dataKey="label" stroke="#888" tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                    <YAxis domain={[0, 100]} stroke="#888" tickLine={false} tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null
+                        const d = payload[0].payload
+                        return (
+                          <div className="rounded-2xl border border-grey-300 bg-paper p-2.5 shadow-xl text-xs space-y-1 font-bold">
+                            <p className="font-extrabold text-ink">ส.{d.week} {d.topic}</p>
+                            {payload.map((p) => (
+                              <div key={p.name} className="flex justify-between gap-3 text-[11px]">
+                                <span style={{ color: p.color }}>{p.name}:</span>
+                                <span>{p.value}%</span>
                               </div>
-                              <div>
-                                <p className="font-extrabold text-ink">
-                                  {s.name} <span className="text-pink-600">"{s.nickname}"</span>
-                                </p>
-                                <p className="text-[10px] text-grey-500 font-mono">ID: {s.id}</p>
-                              </div>
-                            </div>
-                          </td>
+                            ))}
+                          </div>
+                        )
+                      }}
+                    />
+                    {SERIES.map((s) =>
+                      visibleSeries[s.key] ? (
+                        <Line
+                          key={s.key}
+                          name={s.th}
+                          type="monotone"
+                          dataKey={s.key}
+                          stroke={s.color}
+                          strokeWidth={s.width}
+                          dot={{ r: 3, fill: s.color }}
+                        />
+                      ) : null
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
 
-                          <td className="py-3 px-4">
-                            <span className="rounded-md bg-pink-50 px-2 py-0.5 font-bold text-pink-600 border border-pink-200 text-[11px] whitespace-nowrap">
-                              {s.faculty}
-                            </span>
-                          </td>
+            {/* MultiRing Donut (4 Cols) */}
+            <div className="rounded-3xl border border-grey-300/60 bg-paper p-5 shadow-sm md:col-span-4 flex flex-col justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-ink flex items-center gap-1.5">
+                  <PieIcon className="h-4 w-4 text-pink-600" />
+                  <span>สัดส่วนภาพรวม</span>
+                </h3>
+                <p className="text-[11px] text-grey-500 font-medium">ส่งแล้ว/มีส่วนร่วม/เข้าใจ</p>
+              </div>
 
-                          <td className="py-3 px-4">
-                            <div className="flex flex-wrap gap-1">
-                              {hw.missingList.map((m) => (
-                                <span
-                                  key={m.id}
-                                  className="rounded bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 border border-rose-200 whitespace-nowrap"
-                                  title={m.title}
-                                >
-                                  {m.code}: {m.title.split('(')[0].trim()}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-
-                          <td className="py-3 px-4 font-black text-rose-600">
-                            -{hw.missingPoints} คะแนน
-                          </td>
-
-                          <td className="py-3 px-4 font-bold text-ink">
-                            <span className="text-sm font-black text-ink">{hw.totalScore}</span>
-                            <span className="text-grey-400 text-xs">/100</span>
-                          </td>
-
-                          <td className="py-3 px-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => remindOne(s.id, s.nickname)}
-                              disabled={isReminded}
-                              className={cn(
-                                'rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer',
-                                isReminded
-                                  ? 'bg-emerald-100 text-emerald-700 cursor-default'
-                                  : 'bg-pink-600 text-white shadow-xs hover:bg-pink-700'
-                              )}
-                            >
-                              {isReminded ? '✓ เตือนแล้ว' : '📲 สะกิดเตือน'}
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })
-                  )}
-                </tbody>
-              </table>
+              <MultiRingChart
+                submissionPct={submissionPct}
+                participationPct={participationPct}
+                comprehensionPct={comprehensionPct}
+                submissionCount={`${getSubmissionCount()}/${students.length}`}
+              />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* SECTION 3: FACULTY STRENGTHS & GAP ANALYSIS */}
-      <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-4">
-        <h2 className="text-lg font-extrabold text-ink flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span>จุดแข็งรายคณะ & บทเรียนที่แต่ละคณะต้องเน้นย้ำ</span>
-        </h2>
+        {/* RIGHT SIDEBAR COLUMN (4 Cols) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Widget 1: Interactive Mini Calendar (Ref Matched) */}
+          <MiniCalendar />
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-canvas p-4 border border-grey-300/40 space-y-1">
-            <p className="text-xs font-bold text-pink-600">คณะการบัญชี</p>
-            <p className="text-xs font-extrabold text-ink">✓ ทำได้ดี: Supply Chain (88%)</p>
-            <p className="text-xs text-grey-500 font-medium">⚠️ ควรเน้นย้ำ: Cross-Cultural Comm</p>
+          {/* Widget 2: Overall Participation Progress (Ref Matched) */}
+          <div className="rounded-3xl border border-grey-300/60 bg-paper p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-extrabold text-ink">การมีส่วนร่วมในคลาส</h3>
+              <span className="text-sm font-black text-purple-600">{getParticipationRate()}%</span>
+            </div>
+
+            {/* Soft Green/Purple Progress Bar */}
+            <div className="h-3 w-full overflow-hidden rounded-full bg-grey-200">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-emerald-400 transition-all duration-1000"
+                style={{ width: `${getParticipationRate()}%` }}
+              />
+            </div>
+
+            <p className="text-xs text-grey-600 font-medium leading-relaxed">
+              <strong>16 จาก 24 คน</strong> ร่วมยกมือตอบคำถามสดในคาบเรียน (Spoke Rate)
+            </p>
           </div>
-          <div className="rounded-2xl bg-canvas p-4 border border-grey-300/40 space-y-1">
-            <p className="text-xs font-bold text-teal-600">คณะนิเทศศาสตร์</p>
-            <p className="text-xs font-extrabold text-ink">✓ ทำได้ดี: Cross-Cultural Comm (85%)</p>
-            <p className="text-xs text-grey-500 font-medium">⚠️ ควรเน้นย้ำ: Entry Modes & Financials</p>
-          </div>
-          <div className="rounded-2xl bg-canvas p-4 border border-grey-300/40 space-y-1">
-            <p className="text-xs font-bold text-blue-600">คณะวิศวกรรมศาสตร์</p>
-            <p className="text-xs font-extrabold text-ink">✓ ทำได้ดี: Global Strategy (82%)</p>
-            <p className="text-xs text-grey-500 font-medium">⚠️ ควรเน้นย้ำ: CSR & Soft Skills</p>
+
+          {/* Widget 3: Upcoming Tasks / Deadlines List (Ref Matched) */}
+          <div className="rounded-3xl border border-grey-300/60 bg-paper p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-extrabold text-ink">กำหนดการส่งงานถัดไป</h3>
+              <span className="text-xs font-bold text-pink-600 cursor-pointer hover:underline">
+                ดูทั้งหมด →
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {ASSIGNMENTS.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between rounded-2xl bg-canvas p-3 border border-grey-300/40 hover:border-pink-300 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-100 text-pink-600 font-extrabold text-xs shrink-0">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-extrabold text-ink line-clamp-1">{a.title}</p>
+                      <p className="text-[10px] text-grey-500 font-medium">กำหนด {a.dueDate} 2026</p>
+                    </div>
+                  </div>
+
+                  <span className="rounded-lg bg-pink-50 px-2 py-0.5 text-[10px] font-extrabold text-pink-700 border border-pink-200 shrink-0">
+                    {a.code}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
