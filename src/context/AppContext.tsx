@@ -80,6 +80,16 @@ export function AppNavigationBridge() {
   return null
 }
 
+/**
+ * Demo sign-in accounts. Hard-coded on purpose: this is a hackathon prototype
+ * with no backend, and the credentials are printed on the login screen so the
+ * audience can sign in themselves. Never a pattern for a real deployment.
+ */
+export const DEMO_ACCOUNTS = [
+  { email: 'teacher@spu.ac.th', password: 'spu1234', role: 'teacher' as const, name: 'อ.ดร.ธนพร' },
+  { email: 'student@spu.ac.th', password: 'spu1234', role: 'student' as const, name: 'ณัฐ (นัท)' },
+]
+
 export type Language = 'th' | 'en'
 export type TranslationKey = keyof typeof TRANSLATIONS['th']
 
@@ -252,6 +262,11 @@ type AppState = {
   // who is looking at the demo
   role: Role
   setRole: (role: Role) => void
+
+  // demo auth
+  signedInEmail: string | null
+  signIn: (email: string, password: string) => { ok: boolean; role?: Role }
+  signOut: () => void
   displayName: string
   teacherName: string
   currentStudent: Student
@@ -320,6 +335,20 @@ const AppContext = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role>('teacher')
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null)
+
+  /** Matches against DEMO_ACCOUNTS; email compare is case-insensitive. */
+  const signIn = useCallback((email: string, password: string) => {
+    const hit = DEMO_ACCOUNTS.find(
+      (a) => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password,
+    )
+    if (!hit) return { ok: false as const }
+    setSignedInEmail(hit.email)
+    setRole(hit.role)
+    return { ok: true as const, role: hit.role }
+  }, [])
+
+  const signOut = useCallback(() => setSignedInEmail(null), [])
   const [students, setStudents] = useState<Student[]>(STUDENTS)
   const [responses, setResponses] = useState<PretestResponse[]>(PRETEST_RESPONSES)
   const [posts, setPosts] = useState<CommunityPost[]>(COMMUNITY_POSTS)
@@ -664,6 +693,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     lang,
     setLang,
+    signedInEmail,
+    signIn,
+    signOut,
     t,
 
     resetDemo,

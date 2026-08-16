@@ -1,15 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, GraduationCap, Loader2 } from 'lucide-react'
-import { useApp } from '@/context/AppContext'
+import { AlertCircle, BookOpen, GraduationCap, Loader2, Lock, Mail } from 'lucide-react'
+import { DEMO_ACCOUNTS, useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
-type RoleChoice = 'teacher' | 'student' | null
-
 export default function Login() {
-  const { setRole } = useApp()
+  const { signIn } = useApp()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState<RoleChoice>(null)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(
@@ -19,89 +21,150 @@ export default function Login() {
     [],
   )
 
-  const signIn = (role: 'teacher' | 'student') => {
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
     if (loading) return
-    setLoading(role)
-    setRole(role)
-    timer.current = setTimeout(() => navigate(role === 'teacher' ? '/teacher' : '/student'), 800)
+
+    if (!email.trim() || !password) {
+      setError('กรุณากรอกอีเมลและรหัสผ่าน')
+      return
+    }
+
+    const result = signIn(email, password)
+    if (!result.ok) {
+      setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
+      return
+    }
+
+    setError(null)
+    setLoading(true)
+    timer.current = setTimeout(
+      () => navigate(result.role === 'teacher' ? '/teacher' : '/student'),
+      800,
+    )
+  }
+
+  const fill = (accEmail: string, accPassword: string) => {
+    setEmail(accEmail)
+    setPassword(accPassword)
+    setError(null)
   }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-canvas p-6">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="mb-7 text-center">
           <p className="text-5xl font-extrabold tracking-tight text-grey-300">SPU</p>
           <h1 className="mt-1 text-3xl font-bold text-pink-600">ClassLoop</h1>
-          <p className="mt-2 text-sm text-grey-600">ผู้ช่วย AI สำหรับออกแบบคาบเรียน Active Learning</p>
+          <p className="mt-2 text-sm text-grey-600">
+            ผู้ช่วย AI สำหรับออกแบบคาบเรียน Active Learning
+          </p>
         </div>
 
-        {/* Login cards */}
-        <div className="space-y-3">
-          {/* Teacher button */}
-          <button
-            type="button"
-            onClick={() => signIn('teacher')}
-            disabled={!!loading}
-            className={cn(
-              'group relative flex w-full items-center gap-4 rounded-2xl border-2 border-transparent bg-paper p-5 text-left shadow-sm transition-all',
-              'hover:border-pink-400 hover:shadow-md active:scale-[0.98]',
-              loading === 'teacher' && 'border-pink-500 opacity-80',
-            )}
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-sm">
-              {loading === 'teacher' ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <BookOpen className="h-6 w-6" />
-              )}
+        <form
+          onSubmit={submit}
+          className="space-y-4 rounded-2xl border border-grey-300/60 bg-paper p-6 shadow-sm"
+        >
+          <div>
+            <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-ink">
+              อีเมล
+            </label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-grey-400" />
+              <input
+                id="email"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setError(null)
+                }}
+                placeholder="you@spu.ac.th"
+                className="w-full rounded-xl border border-grey-300/80 bg-canvas py-2.5 pl-10 pr-3 text-sm text-ink outline-none transition-all focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+              />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-base font-bold text-ink">อาจารย์ / ผู้สอน</p>
-              <p className="text-xs text-grey-600 mt-0.5">
-                {loading === 'teacher' ? 'กำลังเข้าสู่ระบบ...' : 'จัดการคาบเรียน ออกข้อสอบ ดูผลลัพธ์'}
-              </p>
-            </div>
-            <div className="text-grey-300 group-hover:text-pink-500 transition-colors">
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-              </svg>
-            </div>
-          </button>
+          </div>
 
-          {/* Student button */}
+          <div>
+            <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-ink">
+              รหัสผ่าน
+            </label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-grey-400" />
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setError(null)
+                }}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-grey-300/80 bg-canvas py-2.5 pl-10 pr-3 text-sm text-ink outline-none transition-all focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p
+              role="alert"
+              className="flex items-center gap-1.5 rounded-lg bg-pink-50 px-3 py-2 text-sm font-medium text-pink-600"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </p>
+          )}
+
           <button
-            type="button"
-            onClick={() => signIn('student')}
-            disabled={!!loading}
-            className={cn(
-              'group relative flex w-full items-center gap-4 rounded-2xl border-2 border-transparent bg-paper p-5 text-left shadow-sm transition-all',
-              'hover:border-pink-400 hover:shadow-md active:scale-[0.98]',
-              loading === 'student' && 'border-pink-500 opacity-80',
-            )}
+            type="submit"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-pink-600 py-3 text-sm font-bold text-paper shadow-sm transition-all hover:bg-pink-500 active:scale-[0.98] disabled:opacity-80"
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pink-50 border-2 border-pink-200 text-pink-600">
-              {loading === 'student' ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <GraduationCap className="h-6 w-6" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-base font-bold text-ink">นักเรียน / นักศึกษา</p>
-              <p className="text-xs text-grey-600 mt-0.5">
-                {loading === 'student' ? 'กำลังเข้าสู่ระบบ...' : 'เข้าร่วมเกม ทำแบบทดสอบ ดูคะแนน'}
-              </p>
-            </div>
-            <div className="text-grey-300 group-hover:text-pink-500 transition-colors">
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-              </svg>
-            </div>
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </button>
+        </form>
+
+        {/* Demo credentials — visible on purpose so the audience can sign in */}
+        <div className="mt-4 rounded-2xl border border-pink-200 bg-pink-50/60 p-4">
+          <p className="text-xs font-semibold text-grey-600">
+            บัญชีสำหรับเดโม (คลิกเพื่อกรอกอัตโนมัติ)
+          </p>
+          <div className="mt-2 space-y-2">
+            {DEMO_ACCOUNTS.map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                onClick={() => fill(acc.email, acc.password)}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-xl border border-pink-200 bg-paper px-3 py-2.5 text-left transition-all',
+                  'hover:border-pink-400 hover:shadow-sm active:scale-[0.98]',
+                )}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pink-600 text-paper">
+                  {acc.role === 'teacher' ? (
+                    <BookOpen className="h-4 w-4" />
+                  ) : (
+                    <GraduationCap className="h-4 w-4" />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold text-ink">
+                    {acc.role === 'teacher' ? 'อาจารย์ / ผู้สอน' : 'นักเรียน / นักศึกษา'}
+                  </span>
+                  <span className="block truncate font-mono text-[11px] text-grey-600">
+                    {acc.email} · {acc.password}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-grey-600">
+        <p className="mt-5 text-center text-xs text-grey-600">
           สำหรับบุคลากรและนักศึกษามหาวิทยาลัยศรีปทุม
         </p>
       </div>

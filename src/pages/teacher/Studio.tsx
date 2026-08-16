@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   BookOpen,
   Brain,
@@ -30,8 +29,7 @@ import { cn } from '@/lib/utils'
 import type { ActivityFormat, PretestQuestion } from '@/data/seed-data'
 
 export default function Studio() {
-  const navigate = useNavigate()
-  const { topics, generatedContent, startGeneration, isGenerating, setActiveActivity } = useApp()
+  const { topics, generatedContent, startGeneration, isGenerating, activeActivity, setActiveActivity } = useApp()
 
   // Left Panel Input State
   const [usingSampleSyllabus, setUsingSampleSyllabus] = useState(true)
@@ -179,11 +177,8 @@ export default function Studio() {
           </span>
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight">
-              สตูดิโอสร้างสื่อการสอน (AI Studio)
+              Learning Studio
             </h1>
-            <p className="text-sm text-grey-600 mt-0.5">
-              ผู้ช่วย AI สกัด Syllabus แปลงเป็นกิจกรรม ควิซ และ Flashcard ครบจบในคลิกเดียว
-            </p>
           </div>
         </div>
       </div>
@@ -321,7 +316,7 @@ export default function Studio() {
             className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-pink-600 py-4 px-6 text-lg font-extrabold text-white shadow-lg shadow-pink-600/30 hover:bg-pink-600/90 active:scale-[0.98] disabled:opacity-50 transition-all cursor-pointer mt-4"
           >
             <Sparkles className="h-5 w-5 animate-pulse" />
-            <span>✨ สร้างสื่อการสอน</span>
+            <span>สร้างสื่อการสอน</span>
           </button>
         </div>
 
@@ -406,6 +401,7 @@ export default function Studio() {
                     const formatBadge = getFormatBadge(act.format)
                     const FormatIcon = formatBadge.icon
                     const isWhyOpen = openWhyItWorks[idx] ?? false
+                    const isApplied = activeActivity?.name === act.name
 
                     return (
                       <div
@@ -440,11 +436,41 @@ export default function Studio() {
                           </div>
                         </div>
 
-                        {/* Steps List */}
+                        {/* Steps List Header with Circular Apply Button on the Right */}
                         <div className="space-y-2">
-                          <p className="text-xs font-bold text-grey-600 uppercase tracking-wider">
-                            ขั้นตอนกิจกรรม ({act.steps.length} ขั้นตอน)
-                          </p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-grey-600 uppercase tracking-wider">
+                              ขั้นตอนกิจกรรม ({act.steps.length} ขั้นตอน)
+                            </p>
+
+                            {/* Circular / Rounded Pill Apply Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveActivity(act)
+                                showToast(`ใช้กิจกรรม "${act.name}" สำหรับคาบเรียนสดแล้ว`)
+                              }}
+                              className={cn(
+                                'flex h-9 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-xs',
+                                isApplied
+                                  ? 'bg-emerald-600 text-white shadow-emerald-600/20 ring-2 ring-emerald-600/30 scale-105'
+                                  : 'bg-pink-600 text-white hover:bg-pink-700 active:scale-95 shadow-pink-600/20'
+                              )}
+                            >
+                              {isApplied ? (
+                                <>
+                                  <Check className="h-4 w-4 stroke-[3]" />
+                                  <span>Applied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Radio className="h-3.5 w-3.5" />
+                                  <span>Apply</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
                           <ol className="space-y-2">
                             {act.steps.map((step, sIdx) => (
                               <li key={sIdx} className="flex items-start gap-3 text-base text-ink leading-relaxed font-medium">
@@ -491,22 +517,6 @@ export default function Studio() {
                               )}
                             </div>
                           )}
-                        </div>
-
-                        {/* Main Action Button */}
-                        <div className="flex justify-end pt-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveActivity(act)
-                              showToast(`เริ่มกิจกรรม "${act.name}" ในคาบสดแล้ว!`)
-                              navigate('/teacher/live')
-                            }}
-                            className="flex items-center gap-2 rounded-2xl bg-pink-600 px-6 py-3 text-base font-bold text-white shadow-md shadow-pink-600/20 hover:bg-pink-600/90 active:scale-[0.98] transition-all cursor-pointer"
-                          >
-                            <Radio className="h-5 w-5" />
-                            <span>⚡ ส่งเข้าคาบเรียนสด</span>
-                          </button>
                         </div>
                       </div>
                     )

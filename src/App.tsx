@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppNavigationBridge, AppProvider } from '@/context/AppContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import AutoTranslate from '@/components/AutoTranslate'
 import TeacherShell from '@/components/layout/TeacherShell'
 import StudentShell from '@/components/layout/StudentShell'
 import Login from '@/pages/Login'
@@ -23,6 +24,7 @@ export default function App() {
       <AppProvider>
         <BrowserRouter>
           <AppNavigationBridge />
+          <AutoTranslate />
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />

@@ -66,7 +66,7 @@ function Brand() {
 }
 
 export default function TeacherShell() {
-  const { course, teacherName, resetDemo, setRole, t } = useApp()
+  const { course, teacherName, resetDemo, setRole, signOut, t } = useApp()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -269,6 +269,7 @@ export default function TeacherShell() {
                     type="button"
                     onClick={() => {
                       setOpenMenu(null)
+                      signOut()
                       navigate('/login')
                     }}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-pink-50/60"
