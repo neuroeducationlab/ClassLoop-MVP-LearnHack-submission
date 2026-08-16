@@ -205,27 +205,49 @@
 /* =====================================================================
    DARK MODE OVERRIDES for coloured utility classes used throughout
    ===================================================================== */
-.dark .border-grey-300\/60 { border-color: rgb(255 255 255 / 0.08) !important; }
-.dark .border-grey-300\/50 { border-color: rgb(255 255 255 / 0.07) !important; }
-.dark .border-grey-300\/40 { border-color: rgb(255 255 255 / 0.06) !important; }
-.dark .bg-grey-100         { background-color: hsl(255 6% 18%) !important; }
+/* =====================================================================
+   DARK MODE OVERRIDES for high contrast & clear visibility
+   ===================================================================== */
+.dark .border-grey-300\/80 { border-color: rgba(255, 255, 255, 0.18) !important; }
+.dark .border-grey-300\/60 { border-color: rgba(255, 255, 255, 0.14) !important; }
+.dark .border-grey-300\/50 { border-color: rgba(255, 255, 255, 0.12) !important; }
+.dark .border-grey-300\/40 { border-color: rgba(255, 255, 255, 0.10) !important; }
+.dark .bg-grey-100         { background-color: hsl(255 6% 20%) !important; }
 .dark .bg-canvas           { background-color: var(--color-canvas) !important; }
 .dark .bg-paper            { background-color: var(--color-paper) !important; }
-.dark .text-grey-600       { color: #9FA0A5 !important; }
-.dark .text-grey-300       { color: #525156 !important; }
-.dark .bg-pink-50          { background-color: hsl(330 40% 12%) !important; }
-.dark .bg-pink-50\/70      { background-color: hsl(330 40% 12% / 0.7) !important; }
-.dark .bg-pink-50\/60      { background-color: hsl(330 40% 12% / 0.6) !important; }
-.dark .border-pink-100     { border-color: hsl(330 40% 20%) !important; }
-.dark .bg-amber-50         { background-color: hsl(40 35% 12%) !important; }
-.dark .bg-amber-50\/70     { background-color: hsl(40 35% 12% / 0.7) !important; }
-.dark .border-amber-200    { border-color: hsl(40 50% 25%) !important; }
-.dark .bg-emerald-50       { background-color: hsl(152 30% 10%) !important; }
-.dark .border-emerald-200  { border-color: hsl(152 40% 20%) !important; }
-.dark .bg-rose-50\/70      { background-color: hsl(350 35% 12% / 0.7) !important; }
-.dark .border-rose-200     { border-color: hsl(350 45% 22%) !important; }
-.dark .bg-blue-50\/70      { background-color: hsl(220 35% 12% / 0.7) !important; }
-.dark .border-blue-200     { border-color: hsl(220 45% 22%) !important; }
-.dark .bg-white            { background-color: hsl(255 6% 16%) !important; }
+.dark .text-grey-600       { color: #D1D2D8 !important; }
+.dark .text-grey-500       { color: #B5B6BC !important; }
+.dark .text-grey-400       { color: #9A9B9F !important; }
+.dark .text-grey-300       { color: #75767B !important; }
+.dark .text-ink            { color: #FAFAFC !important; }
+
+/* Dark mode form controls visibility */
+.dark input:not([type="checkbox"]):not([type="radio"]), 
+.dark select, 
+.dark textarea {
+  color: #FAFAFC !important;
+  background-color: #24232C !important;
+  border-color: #454354 !important;
+}
+
+.dark select option {
+  background-color: #1A1920 !important;
+  color: #FAFAFC !important;
+}
+
+.dark .bg-pink-50          { background-color: hsl(330 45% 15%) !important; }
+.dark .bg-pink-50\/70      { background-color: hsl(330 45% 15% / 0.7) !important; }
+.dark .bg-pink-50\/60      { background-color: hsl(330 45% 15% / 0.6) !important; }
+.dark .border-pink-100     { border-color: hsl(330 45% 25%) !important; }
+.dark .bg-amber-50         { background-color: hsl(40 40% 14%) !important; }
+.dark .bg-amber-50\/70     { background-color: hsl(40 40% 14% / 0.7) !important; }
+.dark .border-amber-200    { border-color: hsl(40 50% 28%) !important; }
+.dark .bg-emerald-50       { background-color: hsl(152 35% 12%) !important; }
+.dark .border-emerald-200  { border-color: hsl(152 45% 25%) !important; }
+.dark .bg-rose-50\/70      { background-color: hsl(350 40% 14% / 0.7) !important; }
+.dark .border-rose-200     { border-color: hsl(350 45% 28%) !important; }
+.dark .bg-blue-50\/70      { background-color: hsl(220 40% 14% / 0.7) !important; }
+.dark .border-blue-200     { border-color: hsl(220 45% 28%) !important; }
+.dark .bg-white            { background-color: hsl(255 6% 18%) !important; }
 .dark .shadow-sm           { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4) !important; }
 .dark .shadow-md           { box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.5) !important; }
