@@ -28,8 +28,9 @@ export default function App() {
             <Route path="/login" element={<Login />} />
 
             <Route path="/teacher" element={<TeacherShell />}>
-              <Route index element={<Dashboard />} />
+              <Route index element={<Studio />} />
               <Route path="studio" element={<Studio />} />
+              <Route path="dashboard" element={<Dashboard />} />
               <Route path="exams" element={<Exams />} />
               <Route path="live" element={<Live />} />
               <Route path="class" element={<ClassRoster />} />

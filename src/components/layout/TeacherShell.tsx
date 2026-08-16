@@ -28,8 +28,8 @@ import { cn } from '@/lib/utils'
 type NavItem = { to: string; labelKey: TranslationKey; icon: typeof LayoutDashboard; end?: boolean }
 
 const NAV: NavItem[] = [
-  { to: '/teacher', labelKey: 'dashboard', icon: LayoutDashboard, end: true },
-  { to: '/teacher/studio', labelKey: 'studio', icon: Wand2 },
+  { to: '/teacher', labelKey: 'studio', icon: Wand2, end: true },
+  { to: '/teacher/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
   { to: '/teacher/exams', labelKey: 'exams', icon: FileText },
   { to: '/teacher/live', labelKey: 'liveSession', icon: Radio },
   { to: '/teacher/class', labelKey: 'roster', icon: Users },
