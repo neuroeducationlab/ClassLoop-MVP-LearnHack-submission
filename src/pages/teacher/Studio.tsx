@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   BookOpen,
   Brain,
@@ -10,6 +10,7 @@ import {
   EyeOff,
   FileCheck,
   FileText,
+  Folder,
   HelpCircle,
   Layers,
   Lightbulb,
@@ -30,12 +31,14 @@ import type { ActivityFormat, PretestQuestion } from '@/data/seed-data'
 
 export default function Studio() {
   const { topics, generatedContent, startGeneration, isGenerating, activeActivity, setActiveActivity } = useApp()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Left Panel Input State
-  const [usingSampleSyllabus, setUsingSampleSyllabus] = useState(true)
+  // Left Panel Input State (Starts EMPTY as requested)
+  const [, setUsingSampleSyllabus] = useState(false)
   const [selectedTopicId, setSelectedTopicId] = useState<string>(topics[1]?.id || 't2')
   const [studentCount, setStudentCount] = useState<number>(24)
-  const [fileName, setFileName] = useState<string | null>('Course_Syllabus_PIBM3301.pdf')
+  const [fileName, setFileName] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   const allFaculties = [
     { id: 'Accounting', name: 'การบัญชี' },
@@ -49,8 +52,8 @@ export default function Studio() {
     allFaculties.map((f) => f.id)
   )
 
-  // Right Panel & Flow State
-  const [hasGenerated, setHasGenerated] = useState(true)
+  // Right Panel & Flow State (Starts UNGENERATED as requested)
+  const [hasGenerated, setHasGenerated] = useState(false)
   const [activeTab, setActiveTab] = useState<'activities' | 'flashcards' | 'pretest'>('activities')
 
   // Cycling Loader & Progress State
@@ -85,6 +88,10 @@ export default function Studio() {
 
   // Click handler for "สร้างสื่อการสอน"
   const handleGenerate = () => {
+    if (!fileName) {
+      setFileName('Course_Syllabus_PIBM3301.pdf')
+      setUsingSampleSyllabus(true)
+    }
     setHasGenerated(true)
     startGeneration()
     setGenerationStep(0)
@@ -159,7 +166,7 @@ export default function Studio() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-16">
-      {/* Clean Page Header — Easy to Read for Senior Instructors */}
+      {/* Clean Page Header */}
       <div className="flex flex-col gap-1 border-b border-grey-300/40 pb-4">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-600 text-white shadow-md shadow-pink-600/20">
@@ -173,34 +180,80 @@ export default function Studio() {
         </div>
       </div>
 
-      {/* Main Layout Grid: Left Form Panel (40%) & Right Output Panel (60%) */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        
-        {/* LEFT FORM PANEL (40%) — Extremely Clean & Friendly */}
-        <div className="w-full shrink-0 space-y-5 rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm lg:w-[40%]">
-          
-          {/* Section 1: MAIN HERO CALL TO ACTION — Course Syllabus Dropzone */}
+      {/* Main Layout Container — Centers before generation, expands to 2-column after generation */}
+      <div
+        className={cn(
+          'transition-all duration-500',
+          hasGenerated || isGenerating
+            ? 'flex flex-col gap-6 lg:flex-row lg:items-start'
+            : 'max-w-2xl mx-auto'
+        )}
+      >
+        {/* FORM PANEL — Main Focal Creation Zone */}
+        <div
+          className={cn(
+            'space-y-5 rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm transition-all',
+            hasGenerated || isGenerating ? 'w-full shrink-0 lg:w-[40%]' : 'w-full'
+          )}
+        >
+          {/* Section 1: Course Syllabus Drag & Dropzone */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-base font-extrabold text-ink flex items-center gap-2">
-                <FileText className="h-5 w-5 text-pink-600" />
-                <span>1. อัปโหลด Course Syllabus</span>
-              </label>
-              <span className="text-[11px] font-extrabold text-pink-600 bg-pink-50 dark:bg-pink-950/60 px-2.5 py-0.5 rounded-full border border-pink-200">
-                Hero CTA
-              </span>
-            </div>
+            <label className="block text-base font-extrabold text-ink flex items-center gap-2">
+              <FileText className="h-5 w-5 text-pink-600" />
+              <span>1. ใส่ไฟล์ Course Syllabus</span>
+            </label>
 
-            {/* Prominent Hero Dropzone Box */}
-            <div
-              onClick={() => {
-                setFileName('Course_Syllabus_PIBM3301.pdf')
-                setUsingSampleSyllabus(false)
-                showToast('อัปโหลดไฟล์ Syllabus เรียบร้อยแล้ว')
+            {/* Hidden Native File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const file = e.target.files[0]
+                  setFileName(file.name)
+                  setUsingSampleSyllabus(false)
+                  showToast(`เลือกไฟล์ "${file.name}" เรียบร้อยแล้ว`)
+                }
               }}
+            />
+
+            {/* Drag & Drop Hero Box */}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault()
+                setIsDragging(true)
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setIsDragging(false)
+                
+                // 1. Handle actual file drop from OS
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  const droppedFile = e.dataTransfer.files[0]
+                  setFileName(droppedFile.name)
+                  setUsingSampleSyllabus(false)
+                  showToast(`ลากวางไฟล์ "${droppedFile.name}" เรียบร้อยแล้ว`)
+                  return
+                }
+                
+                // 2. Handle simulated drag from our sample folder
+                const droppedText = e.dataTransfer.getData("text/plain")
+                if (droppedText === "sample-mkt201") {
+                  setUsingSampleSyllabus(true)
+                  setFileName('Course_Syllabus_MKT201.docx')
+                  setSelectedTopicId(topics[0]?.id || 't1')
+                  showToast('ลากวางไฟล์ตัวอย่าง MKT201 (การตลาดดิจิทัล) เรียบร้อยแล้ว')
+                }
+              }}
+              onClick={() => fileInputRef.current?.click()}
               className={cn(
-                'group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed p-6 text-center transition-all cursor-pointer shadow-sm',
-                fileName
+                'group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 text-center transition-all cursor-pointer shadow-sm',
+                isDragging
+                  ? 'border-pink-600 bg-pink-100/60 dark:bg-pink-950/80 scale-[1.02] ring-4 ring-pink-500/30'
+                  : fileName
                   ? 'border-pink-500 bg-pink-50/50 dark:bg-pink-950/30 ring-2 ring-pink-500/20'
                   : 'border-pink-300 bg-pink-50/20 hover:border-pink-500 hover:bg-pink-50/40'
               )}
@@ -220,17 +273,17 @@ export default function Studio() {
                     </p>
                   </div>
                   <span className="text-xs font-bold text-pink-600 underline pt-1 group-hover:text-pink-700">
-                    คลิกเพื่อเปลี่ยนไฟล์ใหม่
+                    คลิกหรือลากวางไฟล์ใหม่เพื่อเปลี่ยน
                   </span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 group-hover:scale-110 transition-transform shadow-xs">
-                    <Upload className="h-7 w-7" />
+                <div className="flex flex-col items-center gap-3 py-3">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-pink-100 text-pink-600 group-hover:scale-110 transition-transform shadow-xs">
+                    <Upload className="h-8 w-8" />
                   </div>
                   <div>
-                    <p className="text-base font-extrabold text-ink">
-                      ลากและวางไฟล์ Course Syllabus ที่นี่
+                    <p className="text-lg font-extrabold text-ink">
+                      {isDragging ? 'วางไฟล์ที่นี่เพื่ออัปโหลด!' : 'ลากและวางไฟล์ Course Syllabus ที่นี่'}
                     </p>
                     <p className="text-xs text-grey-600 mt-1">
                       หรือคลิกเพื่อเลือกไฟล์จากเครื่อง (รองรับ PDF, DOCX, TXT สูงสุด 20MB)
@@ -238,55 +291,34 @@ export default function Studio() {
                   </div>
                 </div>
               )}
+
+              {/* Sample file integrated inside dropzone removed as per request */}
             </div>
 
-            {/* Demo Sample Files Section for Quick System Testing */}
-            <div className="rounded-2xl bg-canvas p-3.5 border border-grey-300/50 space-y-2">
-              <p className="text-xs font-bold text-grey-600 flex items-center gap-1.5">
-                <span>🧪 ทดลองระบบด้วยไฟล์ตัวอย่าง:</span>
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUsingSampleSyllabus(true)
-                    setFileName('Course_Syllabus_PIBM3301.pdf')
-                    setSelectedTopicId(topics[1]?.id || 't2')
-                    showToast('เลือกไฟล์ตัวอย่าง PIBM3301 (ธุรกิจข้ามชาติ)')
-                  }}
-                  className={cn(
-                    'flex items-center justify-between rounded-xl p-2.5 text-left border text-xs transition-all cursor-pointer',
-                    usingSampleSyllabus && fileName === 'Course_Syllabus_PIBM3301.pdf'
-                      ? 'border-pink-500 bg-pink-50 text-pink-600 font-bold dark:bg-pink-950/60'
-                      : 'border-grey-300/60 bg-paper text-ink hover:border-pink-300'
-                  )}
-                >
-                  <span className="truncate pr-1">วิชา PIBM3301 (ธุรกิจข้ามชาติ)</span>
-                  {usingSampleSyllabus && fileName === 'Course_Syllabus_PIBM3301.pdf' && (
-                    <Check className="h-4 w-4 shrink-0 text-pink-600" />
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUsingSampleSyllabus(true)
-                    setFileName('Course_Syllabus_MKT201.docx')
-                    setSelectedTopicId(topics[0]?.id || 't1')
-                    showToast('เลือกไฟล์ตัวอย่าง MKT201 (การตลาดดิจิทัล)')
-                  }}
-                  className={cn(
-                    'flex items-center justify-between rounded-xl p-2.5 text-left border text-xs transition-all cursor-pointer',
-                    usingSampleSyllabus && fileName === 'Course_Syllabus_MKT201.docx'
-                      ? 'border-pink-500 bg-pink-50 text-pink-600 font-bold dark:bg-pink-950/60'
-                      : 'border-grey-300/60 bg-paper text-ink hover:border-pink-300'
-                  )}
-                >
-                  <span className="truncate pr-1">วิชา MKT201 (การตลาดดิจิทัล)</span>
-                  {usingSampleSyllabus && fileName === 'Course_Syllabus_MKT201.docx' && (
-                    <Check className="h-4 w-4 shrink-0 text-pink-600" />
-                  )}
-                </button>
+            {/* Draggable Folder - OUTSIDE dropzone but inside Section 1 */}
+            <div className="flex justify-center pt-2">
+              <div
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", "sample-mkt201")
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setUsingSampleSyllabus(true)
+                  setFileName('Course_Syllabus_MKT201.docx')
+                  setSelectedTopicId(topics[0]?.id || 't1')
+                  showToast('เลือกไฟล์ตัวอย่าง MKT201 (การตลาดดิจิทัล)')
+                }}
+                className="flex items-center gap-3.5 rounded-2xl border border-grey-300/80 bg-white p-3 pr-6 shadow-sm cursor-grab active:cursor-grabbing hover:border-pink-400 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                title="ลากโฟลเดอร์นี้ไปวางในกล่องด้านบนได้เลย"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                  <Folder className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-extrabold text-ink group-hover:text-pink-600 transition-colors">Course_Syllabus_MKT201</p>
+                  <p className="text-xs font-bold text-grey-500 mt-0.5">📂 วิชาการตลาดดิจิทัล • ลากไปวางได้เลย</p>
+                </div>
               </div>
             </div>
           </div>
@@ -378,398 +410,396 @@ export default function Studio() {
           </button>
         </div>
 
-        {/* RIGHT OUTPUT PANEL (60%) — Clean & Uncluttered */}
-        <div className="w-full flex-1 lg:w-[60%]">
+        {/* RIGHT OUTPUT PANEL (Reveals ONLY after generating) */}
+        {(hasGenerated || isGenerating) && (
+          <div className="w-full flex-1 lg:w-[60%] animate-fadeIn">
+            {/* STATE 1: Simple Loading State */}
+            {isGenerating && (
+              <div className="space-y-6 rounded-3xl border border-grey-300/60 bg-paper p-8 text-center shadow-md">
+                <div className="space-y-3 max-w-sm mx-auto">
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="h-4 w-4 rounded-full bg-pink-600 animate-ping" />
+                    <span className="text-lg font-bold text-ink">
+                      {generationStepTexts[generationStep]}
+                    </span>
+                  </div>
 
-          {/* STATE 1: Simple Loading State */}
-          {isGenerating && (
-            <div className="space-y-6 rounded-3xl border border-grey-300/60 bg-paper p-8 text-center shadow-md">
-              <div className="space-y-3 max-w-sm mx-auto">
-                <div className="flex items-center justify-center gap-3">
-                  <div className="h-4 w-4 rounded-full bg-pink-600 animate-ping" />
-                  <span className="text-lg font-bold text-ink">
-                    {generationStepTexts[generationStep]}
-                  </span>
+                  <div className="h-3 w-full overflow-hidden rounded-full bg-grey-300/30">
+                    <div
+                      className="h-full rounded-full bg-pink-600 transition-all duration-150 ease-out"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="text-xs font-bold text-pink-600">{progressPercent}%</p>
                 </div>
-
-                <div className="h-3 w-full overflow-hidden rounded-full bg-grey-300/30">
-                  <div
-                    className="h-full rounded-full bg-pink-600 transition-all duration-150 ease-out"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
-                <p className="text-xs font-bold text-pink-600">{progressPercent}%</p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* STATE 2: Revealed Generated Results */}
-          {hasGenerated && !isGenerating && (
-            <div className="space-y-6">
+            {/* STATE 2: Revealed Generated Results */}
+            {hasGenerated && !isGenerating && (
+              <div className="space-y-6">
+                {/* 3 Main Tabs Navigation */}
+                <div className="flex items-center gap-2 rounded-2xl border border-grey-300/60 bg-paper p-2 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('activities')}
+                    className={cn(
+                      'flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold transition-all cursor-pointer',
+                      activeTab === 'activities'
+                        ? 'bg-pink-600 text-white shadow-md'
+                        : 'text-grey-600 hover:bg-pink-50/50 hover:text-pink-600'
+                    )}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span>กิจกรรมการสอน ({generatedContent.activities.length})</span>
+                  </button>
 
-              {/* 3 Main Tabs Navigation */}
-              <div className="flex items-center gap-2 rounded-2xl border border-grey-300/60 bg-paper p-2 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('activities')}
-                  className={cn(
-                    'flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold transition-all cursor-pointer',
-                    activeTab === 'activities'
-                      ? 'bg-pink-600 text-white shadow-md'
-                      : 'text-grey-600 hover:bg-pink-50/50 hover:text-pink-600'
-                  )}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  <span>กิจกรรมการสอน ({generatedContent.activities.length})</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('flashcards')}
+                    className={cn(
+                      'flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold transition-all cursor-pointer',
+                      activeTab === 'flashcards'
+                        ? 'bg-pink-600 text-white shadow-md'
+                        : 'text-grey-600 hover:bg-pink-50/50 hover:text-pink-600'
+                    )}
+                  >
+                    <Layers className="h-4 w-4" />
+                    <span>Flashcards ({generatedContent.flashcards.length})</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('flashcards')}
-                  className={cn(
-                    'flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold transition-all cursor-pointer',
-                    activeTab === 'flashcards'
-                      ? 'bg-pink-600 text-white shadow-md'
-                      : 'text-grey-600 hover:bg-pink-50/50 hover:text-pink-600'
-                  )}
-                >
-                  <Layers className="h-4 w-4" />
-                  <span>Flashcards ({generatedContent.flashcards.length})</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('pretest')}
-                  className={cn(
-                    'flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold transition-all cursor-pointer',
-                    activeTab === 'pretest'
-                      ? 'bg-pink-600 text-white shadow-md'
-                      : 'text-grey-600 hover:bg-pink-50/50 hover:text-pink-600'
-                  )}
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>ข้อสอบ ({generatedContent.pretest.length})</span>
-                </button>
-              </div>
-
-              {/* TAB 1: Activities */}
-              {activeTab === 'activities' && (
-                <div className="space-y-5">
-                  {generatedContent.activities.map((act, idx) => {
-                    const formatBadge = getFormatBadge(act.format)
-                    const FormatIcon = formatBadge.icon
-                    const isWhyOpen = openWhyItWorks[idx] ?? false
-                    const isApplied = activeActivity?.name === act.name
-
-                    return (
-                      <div
-                        key={idx}
-                        className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-4"
-                      >
-                        {/* Heading & Badges */}
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div>
-                            <span className="text-xs font-bold text-pink-600 bg-pink-50 px-2.5 py-0.5 rounded-md border border-pink-200">
-                              กิจกรรมที่ {idx + 1}
-                            </span>
-                            <h3 className="text-xl font-bold text-ink mt-1">
-                              {act.name}
-                            </h3>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={cn(
-                                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold border',
-                                formatBadge.class
-                              )}
-                            >
-                              <FormatIcon className="h-3.5 w-3.5" />
-                              {formatBadge.label}
-                            </span>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-xs font-bold text-pink-600 border border-pink-200">
-                              <Clock className="h-3.5 w-3.5" />
-                              {act.durationMin} นาที
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Steps List Header with Circular Apply Button on the Right */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-bold text-grey-600 uppercase tracking-wider">
-                              ขั้นตอนกิจกรรม ({act.steps.length} ขั้นตอน)
-                            </p>
-
-                            {/* Circular / Rounded Pill Apply Button */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveActivity(act)
-                                showToast(`ใช้กิจกรรม "${act.name}" สำหรับคาบเรียนสดแล้ว`)
-                              }}
-                              className={cn(
-                                'flex h-9 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-xs',
-                                isApplied
-                                  ? 'bg-emerald-600 text-white shadow-emerald-600/20 ring-2 ring-emerald-600/30 scale-105'
-                                  : 'bg-pink-600 text-white hover:bg-pink-700 active:scale-95 shadow-pink-600/20'
-                              )}
-                            >
-                              {isApplied ? (
-                                <>
-                                  <Check className="h-4 w-4 stroke-[3]" />
-                                  <span>Applied</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Radio className="h-3.5 w-3.5" />
-                                  <span>Apply</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-
-                          <ol className="space-y-2">
-                            {act.steps.map((step, sIdx) => (
-                              <li key={sIdx} className="flex items-start gap-3 text-base text-ink leading-relaxed font-medium">
-                                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-pink-600 text-xs font-bold text-white mt-0.5">
-                                  {sIdx + 1}
-                                </span>
-                                <span>{step}</span>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-
-                        {/* Why It Works Collapsible */}
-                        <div className="rounded-2xl border border-grey-300/40 bg-canvas overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setOpenWhyItWorks((prev) => ({
-                                ...prev,
-                                [idx]: !prev[idx],
-                              }))
-                            }
-                            className="flex w-full items-center justify-between px-4 py-3 text-xs font-bold text-ink hover:bg-grey-300/10 transition-colors cursor-pointer"
-                          >
-                            <span className="flex items-center gap-2 text-pink-600">
-                              <Brain className="h-4 w-4" />
-                              <span>ทำไมกิจกรรมนี้ถึงได้ผล</span>
-                            </span>
-                            {isWhyOpen ? (
-                              <ChevronUp className="h-4 w-4 text-grey-600" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-grey-600" />
-                            )}
-                          </button>
-
-                          {isWhyOpen && (
-                            <div className="px-4 pb-4 pt-1 text-xs text-grey-600 space-y-2 border-t border-grey-300/30">
-                              <p className="leading-relaxed text-ink/90 font-medium">{act.whyItWorks}</p>
-                              {act.materialsNeeded && (
-                                <p className="text-xs text-grey-600 pt-1 flex items-center gap-1.5">
-                                  <Package className="h-4 w-4 text-pink-600 shrink-0" />
-                                  <span><strong className="text-ink">สื่ออุปกรณ์: </strong>{act.materialsNeeded}</span>
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('pretest')}
+                    className={cn(
+                      'flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold transition-all cursor-pointer',
+                      activeTab === 'pretest'
+                        ? 'bg-pink-600 text-white shadow-md'
+                        : 'text-grey-600 hover:bg-pink-50/50 hover:text-pink-600'
+                    )}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>ข้อสอบ ({generatedContent.pretest.length})</span>
+                  </button>
                 </div>
-              )}
 
-              {/* TAB 2: Flashcards 3D (8 Cards) */}
-              {activeTab === 'flashcards' && (
-                <div className="space-y-4">
-                  <p className="text-xs font-bold text-pink-600 flex items-center gap-1.5 bg-pink-50 p-3 rounded-2xl border border-pink-200">
-                    <RotateCw className="h-4 w-4" />
-                    <span>คลิกที่การ์ดเพื่อพลิกดูคำอธิบาย (Flashcard Flip)</span>
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {generatedContent.flashcards.map((card, idx) => {
-                      const isFlipped = flippedCards[idx] ?? false
+                {/* TAB 1: Activities */}
+                {activeTab === 'activities' && (
+                  <div className="space-y-5">
+                    {generatedContent.activities.map((act, idx) => {
+                      const formatBadge = getFormatBadge(act.format)
+                      const FormatIcon = formatBadge.icon
+                      const isWhyOpen = openWhyItWorks[idx] ?? false
+                      const isApplied = activeActivity?.name === act.name
 
                       return (
-                        <div key={idx} className="flex flex-col space-y-2">
-                          <div
-                            onClick={() =>
-                              setFlippedCards((prev) => ({
-                                ...prev,
-                                [idx]: !prev[idx],
-                              }))
-                            }
-                            className="perspective-1000 h-44 w-full cursor-pointer select-none"
-                          >
-                            <div
-                              className={cn(
-                                'relative h-full w-full rounded-3xl transition-transform duration-500 transform-style-3d shadow-sm border border-grey-300/60',
-                                isFlipped ? 'rotate-y-180 bg-pink-50/80' : 'bg-paper'
-                              )}
-                            >
-                              {/* FRONT FACE */}
-                              <div className="backface-hidden absolute inset-0 flex flex-col justify-between p-5 rounded-3xl bg-paper">
-                                <span className="rounded-lg bg-pink-50 px-2.5 py-1 text-pink-600 text-xs font-bold w-fit">
-                                  #{idx + 1}
-                                </span>
-                                <h4 className="text-center font-bold text-ink text-base leading-snug my-auto px-1">
-                                  {card.front}
-                                </h4>
-                                <span className="text-[11px] text-center font-bold text-pink-600">
-                                  แตะเพื่อพลิก
-                                </span>
-                              </div>
+                        <div
+                          key={idx}
+                          className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-4"
+                        >
+                          {/* Heading & Badges */}
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <span className="text-xs font-bold text-pink-600 bg-pink-50 px-2.5 py-0.5 rounded-md border border-pink-200">
+                                กิจกรรมที่ {idx + 1}
+                              </span>
+                              <h3 className="text-xl font-bold text-ink mt-1">
+                                {act.name}
+                              </h3>
+                            </div>
 
-                              {/* BACK FACE */}
-                              <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col justify-between p-5 rounded-3xl bg-pink-50/90 text-ink">
-                                <span className="text-xs font-bold text-pink-600">คำอธิบาย:</span>
-                                <p className="text-sm text-center font-bold leading-relaxed my-auto text-ink">
-                                  {card.back}
-                                </p>
-                                <span className="text-[10px] text-center text-grey-600 font-medium">
-                                  แตะเพื่อพลิกกลับ
-                                </span>
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold border',
+                                  formatBadge.class
+                                )}
+                              >
+                                <FormatIcon className="h-3.5 w-3.5" />
+                                {formatBadge.label}
+                              </span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-xs font-bold text-pink-600 border border-pink-200">
+                                <Clock className="h-3.5 w-3.5" />
+                                {act.durationMin} นาที
+                              </span>
                             </div>
                           </div>
 
-                          {isFlipped && (
-                            <div className="rounded-xl bg-pink-50 p-2 text-xs text-pink-600 border border-pink-200 flex items-start gap-1.5">
-                              <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
-                              <span><strong>Hint:</strong> {card.hint}</span>
+                          {/* Steps List Header with Circular Apply Button on the Right */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-bold text-grey-600 uppercase tracking-wider">
+                                ขั้นตอนกิจกรรม ({act.steps.length} ขั้นตอน)
+                              </p>
+
+                              {/* Circular / Rounded Pill Apply Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveActivity(act)
+                                  showToast(`ใช้กิจกรรม "${act.name}" สำหรับคาบเรียนสดแล้ว`)
+                                }}
+                                className={cn(
+                                  'flex h-9 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-extrabold transition-all duration-300 cursor-pointer shadow-xs',
+                                  isApplied
+                                    ? 'bg-emerald-600 text-white shadow-emerald-600/20 ring-2 ring-emerald-600/30 scale-105'
+                                    : 'bg-pink-600 text-white hover:bg-pink-700 active:scale-95 shadow-pink-600/20'
+                                )}
+                              >
+                                {isApplied ? (
+                                  <>
+                                    <Check className="h-4 w-4 stroke-[3]" />
+                                    <span>Applied</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Radio className="h-3.5 w-3.5" />
+                                    <span>Apply</span>
+                                  </>
+                                )}
+                              </button>
                             </div>
-                          )}
+
+                            <ol className="space-y-2">
+                              {act.steps.map((step, sIdx) => (
+                                <li key={sIdx} className="flex items-start gap-3 text-base text-ink leading-relaxed font-medium">
+                                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-pink-600 text-xs font-bold text-white mt-0.5">
+                                    {sIdx + 1}
+                                  </span>
+                                  <span>{step}</span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+
+                          {/* Why It Works Collapsible */}
+                          <div className="rounded-2xl border border-grey-300/40 bg-canvas overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenWhyItWorks((prev) => ({
+                                  ...prev,
+                                  [idx]: !prev[idx],
+                                }))
+                              }
+                              className="flex w-full items-center justify-between px-4 py-3 text-xs font-bold text-ink hover:bg-grey-300/10 transition-colors cursor-pointer"
+                            >
+                              <span className="flex items-center gap-2 text-pink-600">
+                                <Brain className="h-4 w-4" />
+                                <span>ทำไมกิจกรรมนี้ถึงได้ผล</span>
+                              </span>
+                              {isWhyOpen ? (
+                                <ChevronUp className="h-4 w-4 text-grey-600" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-grey-600" />
+                              )}
+                            </button>
+
+                            {isWhyOpen && (
+                              <div className="px-4 pb-4 pt-1 text-xs text-grey-600 space-y-2 border-t border-grey-300/30">
+                                <p className="leading-relaxed text-ink/90 font-medium">{act.whyItWorks}</p>
+                                {act.materialsNeeded && (
+                                  <p className="text-xs text-grey-600 pt-1 flex items-center gap-1.5">
+                                    <Package className="h-4 w-4 text-pink-600 shrink-0" />
+                                    <span><strong className="text-ink">สื่ออุปกรณ์: </strong>{act.materialsNeeded}</span>
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )
                     })}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* TAB 3: Diagnostic Pre-test (5 Questions) */}
-              {activeTab === 'pretest' && (
-                <div className="space-y-4">
-                  {generatedContent.pretest.map((q, qIdx) => {
-                    const diffBadge = getDifficultyBadge(q.difficulty)
-                    const isRevealed = revealedAnswers[q.id] ?? false
+                {/* TAB 2: Flashcards 3D (8 Cards) */}
+                {activeTab === 'flashcards' && (
+                  <div className="space-y-4">
+                    <p className="text-xs font-bold text-pink-600 flex items-center gap-1.5 bg-pink-50 p-3 rounded-2xl border border-pink-200">
+                      <RotateCw className="h-4 w-4" />
+                      <span>คลิกที่การ์ดเพื่อพลิกดูคำอธิบาย (Flashcard Flip)</span>
+                    </p>
 
-                    return (
-                      <div
-                        key={q.id}
-                        className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-2xs space-y-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink-600 text-xs font-bold text-white mt-0.5">
-                              {qIdx + 1}
-                            </span>
-                            <h4 className="text-base font-bold text-ink leading-snug">
-                              {q.stem}
-                            </h4>
-                          </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {generatedContent.flashcards.map((card, idx) => {
+                        const isFlipped = flippedCards[idx] ?? false
 
-                          <span className={cn('shrink-0 rounded-full px-3 py-1 text-xs', diffBadge.class)}>
-                            {diffBadge.label}
-                          </span>
-                        </div>
-
-                        {/* Options Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                          {q.options.map((opt, optIdx) => {
-                            const isCorrectChoice = optIdx === q.answerIndex
-                            return (
-                              <div
-                                key={optIdx}
-                                className={cn(
-                                  'flex items-center gap-3 rounded-2xl border p-3.5 text-xs transition-all font-semibold',
-                                  isRevealed && isCorrectChoice
-                                    ? 'border-pink-500 bg-pink-50 text-pink-600 font-bold dark:bg-pink-950/60'
-                                    : 'border-grey-300/50 bg-canvas text-ink'
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold border',
-                                    isRevealed && isCorrectChoice
-                                      ? 'border-pink-600 bg-pink-600 text-white'
-                                      : 'border-grey-300 bg-paper text-grey-600'
-                                  )}
-                                >
-                                  {String.fromCharCode(65 + optIdx)}
-                                </span>
-                                <span className="flex-1">{opt}</span>
-                                {isRevealed && isCorrectChoice && (
-                                  <Check className="h-4 w-4 text-pink-600 shrink-0" />
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-
-                        {/* Answer Reveal Toggle */}
-                        <div className="flex flex-col gap-3 pt-2 border-t border-grey-300/30">
-                          <div className="flex justify-end">
-                            <button
-                              type="button"
+                        return (
+                          <div key={idx} className="flex flex-col space-y-2">
+                            <div
                               onClick={() =>
-                                setRevealedAnswers((prev) => ({
+                                setFlippedCards((prev) => ({
                                   ...prev,
-                                  [q.id]: !prev[q.id],
+                                  [idx]: !prev[idx],
                                 }))
                               }
-                              className="flex items-center gap-1.5 rounded-xl border border-pink-300/80 bg-pink-50/60 px-3.5 py-1.5 text-xs font-bold text-pink-600 hover:bg-pink-50 transition-colors cursor-pointer"
+                              className="perspective-1000 h-44 w-full cursor-pointer select-none"
                             >
-                              {isRevealed ? (
-                                <>
-                                  <EyeOff className="h-4 w-4" />
-                                  <span>ซ่อนเฉลย</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Eye className="h-4 w-4" />
-                                  <span>ดูเฉลย</span>
-                                </>
-                              )}
-                            </button>
+                              <div
+                                className={cn(
+                                  'relative h-full w-full rounded-3xl transition-transform duration-500 transform-style-3d shadow-sm border border-grey-300/60',
+                                  isFlipped ? 'rotate-y-180 bg-pink-50/80' : 'bg-paper'
+                                )}
+                              >
+                                {/* FRONT FACE */}
+                                <div className="backface-hidden absolute inset-0 flex flex-col justify-between p-5 rounded-3xl bg-paper">
+                                  <span className="rounded-lg bg-pink-50 px-2.5 py-1 text-pink-600 text-xs font-bold w-fit">
+                                    #{idx + 1}
+                                  </span>
+                                  <h4 className="text-center font-bold text-ink text-base leading-snug my-auto px-1">
+                                    {card.front}
+                                  </h4>
+                                  <span className="text-[11px] text-center font-bold text-pink-600">
+                                    แตะเพื่อพลิก
+                                  </span>
+                                </div>
+
+                                {/* BACK FACE */}
+                                <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col justify-between p-5 rounded-3xl bg-pink-50/90 text-ink">
+                                  <span className="text-xs font-bold text-pink-600">คำอธิบาย:</span>
+                                  <p className="text-sm text-center font-bold leading-relaxed my-auto text-ink">
+                                    {card.back}
+                                  </p>
+                                  <span className="text-[10px] text-center text-grey-600 font-medium">
+                                    แตะเพื่อพลิกกลับ
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {isFlipped && (
+                              <div className="rounded-xl bg-pink-50 p-2 text-xs text-pink-600 border border-pink-200 flex items-start gap-1.5">
+                                <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span><strong>Hint:</strong> {card.hint}</span>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: Diagnostic Pre-test (5 Questions) */}
+                {activeTab === 'pretest' && (
+                  <div className="space-y-4">
+                    {generatedContent.pretest.map((q, qIdx) => {
+                      const diffBadge = getDifficultyBadge(q.difficulty)
+                      const isRevealed = revealedAnswers[q.id] ?? false
+
+                      return (
+                        <div
+                          key={q.id}
+                          className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-2xs space-y-4"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink-600 text-xs font-bold text-white mt-0.5">
+                                {qIdx + 1}
+                              </span>
+                              <h4 className="text-base font-bold text-ink leading-snug">
+                                {q.stem}
+                              </h4>
+                            </div>
+
+                            <span className={cn('shrink-0 rounded-full px-3 py-1 text-xs', diffBadge.class)}>
+                              {diffBadge.label}
+                            </span>
                           </div>
 
-                          {isRevealed && (
-                            <div className="rounded-2xl border border-pink-300/60 bg-pink-50/80 p-4 text-xs text-ink space-y-1 animate-fadeIn">
-                              <div className="flex items-center gap-1.5 font-bold text-pink-600">
-                                <HelpCircle className="h-4 w-4" />
-                                <span>ข้อควรระวังสำหรับเด็กต่างคณะ:</span>
-                              </div>
-                              <p className="text-grey-600 pl-5 leading-relaxed font-medium">
-                                {q.misconception}
-                              </p>
+                          {/* Options Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                            {q.options.map((opt, optIdx) => {
+                              const isCorrectChoice = optIdx === q.answerIndex
+                              return (
+                                <div
+                                  key={optIdx}
+                                  className={cn(
+                                    'flex items-center gap-3 rounded-2xl border p-3.5 text-xs transition-all font-semibold',
+                                    isRevealed && isCorrectChoice
+                                      ? 'border-pink-500 bg-pink-50 text-pink-600 font-bold dark:bg-pink-950/60'
+                                      : 'border-grey-300/50 bg-canvas text-ink'
+                                  )}
+                                >
+                                  <span
+                                    className={cn(
+                                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold border',
+                                      isRevealed && isCorrectChoice
+                                        ? 'border-pink-600 bg-pink-600 text-white'
+                                        : 'border-grey-300 bg-paper text-grey-600'
+                                    )}
+                                  >
+                                    {String.fromCharCode(65 + optIdx)}
+                                  </span>
+                                  <span className="flex-1">{opt}</span>
+                                  {isRevealed && isCorrectChoice && (
+                                    <Check className="h-4 w-4 text-pink-600 shrink-0" />
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          {/* Answer Reveal Toggle */}
+                          <div className="flex flex-col gap-3 pt-2 border-t border-grey-300/30">
+                            <div className="flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setRevealedAnswers((prev) => ({
+                                    ...prev,
+                                    [q.id]: !prev[q.id],
+                                  }))
+                                }
+                                className="flex items-center gap-1.5 rounded-xl border border-pink-300/80 bg-pink-50/60 px-3.5 py-1.5 text-xs font-bold text-pink-600 hover:bg-pink-50 transition-colors cursor-pointer"
+                              >
+                                {isRevealed ? (
+                                  <>
+                                    <EyeOff className="h-4 w-4" />
+                                    <span>ซ่อนเฉลย</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye className="h-4 w-4" />
+                                    <span>ดูเฉลย</span>
+                                  </>
+                                )}
+                              </button>
                             </div>
-                          )}
+
+                            {isRevealed && (
+                              <div className="rounded-2xl border border-pink-300/60 bg-pink-50/80 p-4 text-xs text-ink space-y-1 animate-fadeIn">
+                                <div className="flex items-center gap-1.5 font-bold text-pink-600">
+                                  <HelpCircle className="h-4 w-4" />
+                                  <span>ข้อควรระวังสำหรับเด็กต่างคณะ:</span>
+                                </div>
+                                <p className="text-grey-600 pl-5 leading-relaxed font-medium">
+                                  {q.misconception}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+                      )
+                    })}
+                  </div>
+                )}
 
-              {/* Bottom Tip Card */}
-              <div className="rounded-3xl border border-pink-300/50 bg-pink-50 p-5 shadow-xs space-y-2 mt-6">
-                <div className="flex items-center gap-2 text-sm font-bold text-pink-600">
-                  <Lightbulb className="h-5 w-5 text-pink-600" />
-                  <span>คำแนะนำการสอนคลาสเรียนข้ามคณะ</span>
+                {/* Bottom Tip Card */}
+                <div className="rounded-3xl border border-pink-300/50 bg-pink-50 p-5 shadow-xs space-y-2 mt-6">
+                  <div className="flex items-center gap-2 text-sm font-bold text-pink-600">
+                    <Lightbulb className="h-5 w-5 text-pink-600" />
+                    <span>คำแนะนำการสอนคลาสเรียนข้ามคณะ</span>
+                  </div>
+                  <p className="text-xs text-ink leading-relaxed pl-7 font-medium">
+                    {generatedContent.mixedClassTip}
+                  </p>
                 </div>
-                <p className="text-xs text-ink leading-relaxed pl-7 font-medium">
-                  {generatedContent.mixedClassTip}
-                </p>
               </div>
-
-            </div>
-          )}
-
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Floating Toast Notification */}

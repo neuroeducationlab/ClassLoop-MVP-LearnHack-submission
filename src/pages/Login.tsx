@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertCircle, BookOpen, GraduationCap, Loader2, Lock, Mail } from 'lucide-react'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
 import { DEMO_ACCOUNTS, useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [selectedRole, setSelectedRole] = useState<'none' | 'teacher' | 'student'>('none')
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(
@@ -53,19 +55,60 @@ export default function Login() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-canvas p-6">
       <div className="w-full max-w-sm">
+        {/* Language switch lives here too — a non-Thai reader must be able to
+            change language before they can even sign in. */}
+        <div className="mb-5 flex justify-center">
+          <LanguageSwitcher />
+        </div>
+
         {/* Logo */}
         <div className="mb-7 text-center">
           <p className="text-5xl font-extrabold tracking-tight text-grey-300">SPU</p>
           <h1 className="mt-1 text-3xl font-bold text-pink-600">ClassLoop</h1>
-          <p className="mt-2 text-sm text-grey-600">
-            ผู้ช่วย AI สำหรับออกแบบคาบเรียน Active Learning
-          </p>
         </div>
 
-        <form
-          onSubmit={submit}
-          className="space-y-4 rounded-2xl border border-grey-300/60 bg-paper p-6 shadow-sm"
-        >
+        {selectedRole === 'none' ? (
+          <div className="space-y-4 animate-fadeIn">
+            <h2 className="text-center text-lg font-bold text-ink mb-6">กรุณาเลือกสถานะของคุณ</h2>
+            
+            <button
+              onClick={() => setSelectedRole('teacher')}
+              className="flex w-full items-center gap-4 rounded-3xl border-2 border-grey-300/60 bg-paper p-5 transition-all hover:border-pink-500 hover:bg-pink-50/40 hover:shadow-md cursor-pointer group"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 group-hover:scale-110 transition-transform shadow-xs">
+                <BookOpen className="h-7 w-7" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-xl font-extrabold text-ink group-hover:text-pink-600 transition-colors">อาจารย์ผู้สอน</h3>
+                <p className="text-sm text-grey-600 mt-1 font-medium">เข้าสู่ระบบจัดการและสร้างสื่อการสอน</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setSelectedRole('student')}
+              className="flex w-full items-center gap-4 rounded-3xl border-2 border-grey-300/60 bg-paper p-5 transition-all hover:border-blue-500 hover:bg-blue-50/40 hover:shadow-md cursor-pointer group"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform shadow-xs">
+                <GraduationCap className="h-7 w-7" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-xl font-extrabold text-ink group-hover:text-blue-600 transition-colors">นักศึกษา</h3>
+                <p className="text-sm text-grey-600 mt-1 font-medium">เข้าเรียน ทำกิจกรรม และทบทวนบทเรียน</p>
+              </div>
+            </button>
+          </div>
+        ) : (
+          <div className="animate-fadeIn">
+            <button 
+              onClick={() => setSelectedRole('none')}
+              className="mb-4 text-sm font-bold text-grey-500 hover:text-pink-600 flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              ← ย้อนกลับ
+            </button>
+            <form
+              onSubmit={submit}
+              className="space-y-4 rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm"
+            >
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-ink">
               อีเมล
@@ -134,7 +177,7 @@ export default function Login() {
             บัญชีสำหรับเดโม (คลิกเพื่อกรอกอัตโนมัติ)
           </p>
           <div className="mt-2 space-y-2">
-            {DEMO_ACCOUNTS.map((acc) => (
+            {DEMO_ACCOUNTS.filter(acc => acc.role === selectedRole).map((acc) => (
               <button
                 key={acc.email}
                 type="button"
@@ -167,6 +210,8 @@ export default function Login() {
         <p className="mt-5 text-center text-xs text-grey-600">
           สำหรับบุคลากรและนักศึกษามหาวิทยาลัยศรีปทุม
         </p>
+          </div>
+        )}
       </div>
     </div>
   )

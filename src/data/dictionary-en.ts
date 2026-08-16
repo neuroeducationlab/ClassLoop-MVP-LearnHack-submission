@@ -75,6 +75,30 @@ export const DICTIONARY_EN: Record<string, string> = {
   ไม่ระบุชื่อ: 'Anonymous',
   'ผู้สอน': 'Instructor',
 
+
+  /* Avatar initials: components render nickname.slice(0, 2), so the 2-character
+     Thai prefix is what reaches the DOM. Map each to its Latin initials. */
+  'ชา': 'Ch',
+  'เอ': 'Ek',
+  'นุ': 'Nu',
+  'แอ': 'An',
+  'เก': 'Ke',
+  'รุ': 'Ru',
+  'กิ': 'Ki',
+  'ไอ': 'Ic',
+  'บอ': 'Bo',
+  'มิ': 'Mi',
+  'ต้': 'To',
+  'แน': 'Na',
+  'บิ': 'Bi',
+  'พล': 'Pl',
+  'ดุ': 'Du',
+  'เบ': 'Be',
+  'ไม': 'Mk',
+  'จู': 'Ju',
+  'นั': 'Na',
+  'หม': 'Mw',
+
   /* -------------------------------------------------------- faculties -- */
   การบัญชี: 'Accounting',
   นิเทศศาสตร์: 'Communication Arts',
@@ -675,6 +699,14 @@ export const DICTIONARY_EN: Record<string, string> = {
   'ข้อ ${labelLetter}': 'Option ${labelLetter}',
 
   /* -------------------------------------------- studio (rev. by owner) -- */
+  '1. อัปโหลด Course Syllabus': '1. Upload your course syllabus',
+  '✓ พร้อมประมวลผล': '✓ Ready to process',
+  'สกัดวัตถุประสงค์และเนื้อหาประจำวิชาเรียบร้อยแล้ว':
+    'Course objectives and content extracted',
+  'คลิกเพื่อเปลี่ยนไฟล์ใหม่': 'Click to swap in a different file',
+  '🧪 ทดลองระบบด้วยไฟล์ตัวอย่าง:': '🧪 Try the system with a sample file:',
+  'วิชา PIBM3301 (ธุรกิจข้ามชาติ)': 'PIBM3301 (International Business)',
+  'วิชา MKT201 (การตลาดดิจิทัล)': 'MKT201 (Digital Marketing)',
   'สตูดิโอสร้างสื่อการสอน (AI Studio)': 'Teaching Material Studio (AI Studio)',
   'ผู้ช่วย AI สกัด Syllabus แปลงเป็นกิจกรรม ควิซ และ Flashcard ครบจบในคลิกเดียว':
     'An AI assistant that turns your syllabus into activities, quizzes and flashcards in one click',
@@ -726,6 +758,7 @@ export const PATTERN_RULES: { re: RegExp; to: string }[] = [
   { re: /^📄\s*ไฟล์ที่ใช้:$/, to: '📄 File in use:' },
   { re: /^วิเคราะห์จากผลคะแนนของคุณ$/, to: 'Based on your scores' },
   { re: /^ปี$/, to: 'Year' },
+  { re: /^ส\.$/, to: 'W' },
   { re: /^สัปดาห์ที่$/, to: 'Week' },
   { re: /^·?\s*สัปดาห์$/, to: '· Week' },
   { re: /^3\. คณะผู้เรียนในห้อง \($/, to: '3. Faculties in the room (' },
