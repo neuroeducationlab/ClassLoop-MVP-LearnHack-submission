@@ -36,9 +36,16 @@ export default function Studio() {
   // Left Panel Input State (Starts EMPTY as requested)
   const [, setUsingSampleSyllabus] = useState(false)
   const [selectedTopicId, setSelectedTopicId] = useState<string>(topics[1]?.id || 't2')
+  const [selectedSec, setSelectedSec] = useState<string>('sec1')
   const [studentCount, setStudentCount] = useState<number>(24)
   const [fileName, setFileName] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+
+  const sections = [
+    { id: 'sec1', name: 'Sec 1 (กลุ่ม 1: อ. 09:00 - 12:00)' },
+    { id: 'sec2', name: 'Sec 2 (กลุ่ม 2: อ. 13:00 - 16:00)' },
+    { id: 'sec3', name: 'Sec 3 (กลุ่ม 3: พฤ. 13:00 - 16:00)' },
+  ]
 
   const allFaculties = [
     { id: 'Accounting', name: 'การบัญชี' },
@@ -354,47 +361,95 @@ export default function Studio() {
             )}
           </div>
 
-          {/* Section 3: Faculty Selection & Student Count */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="block text-sm font-bold text-ink flex items-center gap-2">
-                <Users className="h-4 w-4 text-pink-600" />
-                <span>3. คณะผู้เรียนในห้อง ({studentCount} คน)</span>
+          {/* Section 3: Section Selection & Exact Student Count Input */}
+          <div className="space-y-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <label className="block text-sm font-extrabold text-ink flex items-center gap-2">
+                <Users className="h-4.5 w-4.5 text-pink-600" />
+                <span>3. กลุ่มเรียน (Sec) & จำนวนผู้เรียน</span>
               </label>
             </div>
 
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={10}
-                max={150}
-                step={2}
-                value={studentCount}
-                onChange={(e) => setStudentCount(Number(e.target.value))}
-                className="w-full accent-pink-600 cursor-pointer"
-              />
+            {/* Sec Selection & Number Input Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+              {/* Section Select Dropdown */}
+              <div className="sm:col-span-8">
+                <label className="block text-xs font-bold text-grey-600 mb-1">เลือก Section (กลุ่มเรียน):</label>
+                <select
+                  value={selectedSec}
+                  onChange={(e) => setSelectedSec(e.target.value)}
+                  className="w-full rounded-2xl border border-grey-300/80 bg-paper px-3.5 py-2.5 text-xs font-extrabold text-ink outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all cursor-pointer shadow-2xs"
+                >
+                  {sections.map((sec) => (
+                    <option key={sec.id} value={sec.id}>
+                      {sec.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Exact Number Input for Student Count */}
+              <div className="sm:col-span-4">
+                <label className="block text-xs font-bold text-grey-600 mb-1">จำนวนผู้เรียน (คน):</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={studentCount}
+                    onChange={(e) => setStudentCount(Math.max(1, Number(e.target.value)))}
+                    className="w-full rounded-2xl border border-grey-300/80 bg-paper px-3.5 py-2 text-sm font-black text-ink outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all shadow-2xs"
+                  />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-extrabold text-pink-600">
+                    คน
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Simple Faculty Chips */}
-            <div className="flex flex-wrap gap-1.5">
-              {allFaculties.map((f) => {
-                const isSelected = selectedFaculties.includes(f.id)
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => toggleFaculty(f.id)}
-                    className={cn(
-                      'rounded-full px-3.5 py-1.5 text-xs font-bold transition-all border cursor-pointer',
-                      isSelected
-                        ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-2xs dark:bg-pink-950/60'
-                        : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
-                    )}
-                  >
-                    {f.name}
-                  </button>
-                )
-              })}
+            {/* Quick Preset Pill Buttons */}
+            <div className="flex items-center gap-1.5 pt-0.5">
+              <span className="text-[11px] font-bold text-grey-500">จำนวนยอดนิยม:</span>
+              {[24, 40, 60, 100].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => setStudentCount(num)}
+                  className={cn(
+                    'rounded-xl px-2.5 py-1 text-[11px] font-extrabold transition-all border cursor-pointer',
+                    studentCount === num
+                      ? 'border-pink-500 bg-pink-600 text-white shadow-2xs'
+                      : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
+                  )}
+                >
+                  {num} คน
+                </button>
+              ))}
+            </div>
+
+            {/* Faculty Chips */}
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-xs font-bold text-grey-600">คณะในคลาสเรียนนี้:</label>
+              <div className="flex flex-wrap gap-1.5">
+                {allFaculties.map((f) => {
+                  const isSelected = selectedFaculties.includes(f.id)
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => toggleFaculty(f.id)}
+                      className={cn(
+                        'rounded-full px-3.5 py-1.5 text-xs font-bold transition-all border cursor-pointer',
+                        isSelected
+                          ? 'border-pink-500 bg-pink-50 text-pink-600 shadow-2xs dark:bg-pink-950/60'
+                          : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
+                      )}
+                    >
+                      {f.name}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
 
