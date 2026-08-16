@@ -3,18 +3,18 @@ import { GraduationCap, Presentation } from 'lucide-react'
 import { useApp, type Role } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
-const OPTIONS: { role: Role; label: string; icon: typeof Presentation; to: string }[] = [
-  { role: 'teacher', label: 'อาจารย์', icon: Presentation, to: '/teacher' },
-  { role: 'student', label: 'นักศึกษา', icon: GraduationCap, to: '/student' },
+const OPTIONS: { role: Role; labelKey: 'teacher' | 'student'; icon: typeof Presentation; to: string }[] = [
+  { role: 'teacher', labelKey: 'teacher', icon: Presentation, to: '/teacher' },
+  { role: 'student', labelKey: 'student', icon: GraduationCap, to: '/student' },
 ]
 
 export default function RoleSwitcher() {
-  const { role, setRole } = useApp()
+  const { role, setRole, t } = useApp()
   const navigate = useNavigate()
 
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-pink-50 p-1">
-      {OPTIONS.map(({ role: value, label, icon: Icon, to }) => (
+      {OPTIONS.map(({ role: value, labelKey, icon: Icon, to }) => (
         <button
           key={value}
           type="button"
@@ -30,7 +30,7 @@ export default function RoleSwitcher() {
           )}
         >
           <Icon className="h-4 w-4" />
-          {label}
+          {t(labelKey)}
         </button>
       ))}
     </div>

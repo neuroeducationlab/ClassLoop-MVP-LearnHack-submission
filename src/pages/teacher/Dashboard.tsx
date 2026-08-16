@@ -95,6 +95,7 @@ export default function Dashboard() {
     getSubmissionCount,
     getAverageScore,
     getParticipationRate,
+    t,
   } = useApp()
 
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -227,9 +228,9 @@ export default function Dashboard() {
   }, [devRows])
 
   const stats = [
-    { label: 'ส่งแล้ว', value: `${getSubmissionCount()}/${students.length}` },
-    { label: 'ความเข้าใจเฉลี่ย', value: `${liveAverage}%` },
-    { label: 'มีส่วนร่วม', value: `${getParticipationRate()}%` },
+    { label: t('submitted'), value: `${getSubmissionCount()}/${students.length}` },
+    { label: t('avgUnderstanding'), value: `${liveAverage}%` },
+    { label: t('participation'), value: `${getParticipationRate()}%` },
   ]
 
   /* ------------------------------------------------------------- actions -- */
@@ -252,7 +253,7 @@ export default function Dashboard() {
       {/* page header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink">แดชบอร์ด</h1>
+          <h1 className="text-2xl font-bold text-ink">{t('dashboard')}</h1>
           <p className="mt-1 text-[15px] text-grey-600">
             {course.code} · {course.name}
           </p>
@@ -265,7 +266,7 @@ export default function Dashboard() {
             className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-grey-300/70 px-3 py-2 text-sm font-medium text-grey-300"
           >
             <FileDown className="h-4 w-4" />
-            ส่งออกรายงาน PDF
+            {t('exportPdf')}
           </button>
           <span
             role="tooltip"
@@ -288,7 +289,7 @@ export default function Dashboard() {
 
       {/* ============ HERO — weekly understanding, the main display ============ */}
       <div className="reveal rounded-2xl border border-grey-300/50 border-l-[3px] border-l-pink-600 bg-paper p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-ink">ความเข้าใจรายหัวข้อ (รายสัปดาห์)</h2>
+        <h2 className="text-lg font-bold text-ink">{t('weeklyUnderstanding')}</h2>
 
         <div className="mt-4 h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -400,7 +401,7 @@ export default function Dashboard() {
                 : 'bg-pink-600 text-paper hover:bg-pink-500',
             )}
           >
-            {remediationSent ? '✓ ส่งชุดทบทวนแล้ว — ดูรายละเอียด' : 'ส่งชุดทบทวนรายบุคคล →'}
+            {remediationSent ? `✓ ${t('remediationSentLabel')}` : `${t('sendRemediation')} →`}
           </button>
           <p className="text-sm text-grey-600">
             วิธีแก้จะไปแสดงรายบุคคลในแท็บ "เรียน" ของนักศึกษา ไม่รกหน้าจอของอาจารย์
@@ -413,7 +414,7 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-grey-300/50 bg-paper p-5 lg:col-span-2">
           <h2 className="flex items-center gap-2 text-lg font-bold text-ink">
             <Search className="h-5 w-5 text-pink-600" />
-            <span>คะแนนเฉลี่ยรายคณะ</span>
+            <span>{t('facultyAverage')}</span>
           </h2>
           <p className="mt-0.5 text-sm text-grey-600">
             Pre-test ล่าสุด · {topics.find((t) => t.id === 't2')?.title ?? 'Hofstede'}
@@ -454,7 +455,7 @@ export default function Dashboard() {
         </div>
 
         <div className="rounded-2xl border border-grey-300/50 bg-paper p-5">
-          <h2 className="text-lg font-bold text-ink">พัฒนาการเฉลี่ย</h2>
+          <h2 className="text-lg font-bold text-ink">{t('avgGrowth')}</h2>
           <p className="mt-0.5 text-sm text-grey-600">Pre-test → Post-test ต่อสัปดาห์</p>
           <p className="mt-2 text-4xl font-bold text-pink-600">+{avgDelta} จุด</p>
           <div className="mt-3 space-y-2">
@@ -486,7 +487,7 @@ export default function Dashboard() {
       <div className="reveal grid gap-6 lg:grid-cols-3">
         <div className="rounded-2xl border border-grey-300/50 bg-paper p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-ink">ใครยังไม่ส่ง</h2>
+            <h2 className="text-lg font-bold text-ink">{t('whoHasntSubmitted')}</h2>
             <span className="rounded-full bg-pink-50 px-3 py-1 text-sm font-semibold text-pink-600">
               {pending.length} คน
             </span>
@@ -495,7 +496,7 @@ export default function Dashboard() {
           {/* auto reminder */}
           <div className="mt-3 flex items-center justify-between rounded-xl bg-canvas px-4 py-3">
             <div>
-              <p className="text-[15px] font-semibold text-ink">เตือนอัตโนมัติ</p>
+              <p className="text-[15px] font-semibold text-ink">{t('autoRemind')}</p>
               <p className="text-sm text-grey-600">เตือนซ้ำทุกวัน 18:00 จนกว่าจะส่งครบ</p>
             </div>
             <button
@@ -551,7 +552,7 @@ export default function Dashboard() {
                   {remindedIds.has(s.id) ? (
                     <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-grey-300">
                       <Check className="h-4 w-4" />
-                      เตือนแล้ว
+                      {t('reminded')}
                     </span>
                   ) : (
                     <button
@@ -560,7 +561,7 @@ export default function Dashboard() {
                       className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-pink-300 px-3 py-2 text-sm font-medium text-pink-600 transition-colors hover:bg-pink-50"
                     >
                       <Send className="h-4 w-4" />
-                      เตือน
+                      {t('remind')}
                     </button>
                   )}
                 </li>

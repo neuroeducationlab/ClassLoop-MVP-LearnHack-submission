@@ -22,16 +22,18 @@ import {
 import RoleSwitcher from '@/components/layout/RoleSwitcher'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
 import DarkModeToggle from '@/components/layout/DarkModeToggle'
-import { useApp } from '@/context/AppContext'
+import { useApp, type TranslationKey } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
-const NAV = [
-  { to: '/teacher', label: 'แดชบอร์ด', icon: LayoutDashboard, end: true },
-  { to: '/teacher/studio', label: 'สตูดิโอ', icon: Wand2 },
-  { to: '/teacher/exams', label: 'ข้อสอบ', icon: FileText },
-  { to: '/teacher/live', label: 'คาบเรียน', icon: Radio },
-  { to: '/teacher/class', label: 'รายชื่อ', icon: Users },
-  { to: '/teacher/community', label: 'คอมมูนิตี้', icon: MessagesSquare },
+type NavItem = { to: string; labelKey: TranslationKey; icon: typeof LayoutDashboard; end?: boolean }
+
+const NAV: NavItem[] = [
+  { to: '/teacher', labelKey: 'dashboard', icon: LayoutDashboard, end: true },
+  { to: '/teacher/studio', labelKey: 'studio', icon: Wand2 },
+  { to: '/teacher/exams', labelKey: 'exams', icon: FileText },
+  { to: '/teacher/live', labelKey: 'liveSession', icon: Radio },
+  { to: '/teacher/class', labelKey: 'roster', icon: Users },
+  { to: '/teacher/community', labelKey: 'community', icon: MessagesSquare },
 ]
 
 const LOCKED_COURSES = ['Organisational Behaviour', 'Strategic Management']
@@ -46,9 +48,10 @@ const NOTIFICATIONS = [
 const TEACHER_INITIAL = 'ธ'
 
 function ComingSoonBadge() {
+  const { t } = useApp()
   return (
     <span className="shrink-0 rounded-full bg-grey-300/25 px-1.5 py-0.5 text-[10px] font-medium text-grey-600">
-      เร็วๆ นี้
+      {t('comingSoon')}
     </span>
   )
 }
@@ -63,7 +66,7 @@ function Brand() {
 }
 
 export default function TeacherShell() {
-  const { course, teacherName, resetDemo, setRole } = useApp()
+  const { course, teacherName, resetDemo, setRole, t } = useApp()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -103,7 +106,7 @@ export default function TeacherShell() {
         {/* courses */}
         <div className="px-3 pt-2">
           <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-grey-600">
-            รายวิชา
+            {t('courses')}
           </p>
           <div className="mt-2 flex flex-col gap-1">
             <Link
@@ -131,7 +134,7 @@ export default function TeacherShell() {
 
         {/* nav */}
         <nav className="mt-4 flex flex-1 flex-col gap-1 border-t border-grey-300/40 px-3 pt-4">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {NAV.map(({ to, labelKey, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -146,7 +149,7 @@ export default function TeacherShell() {
               }
             >
               <Icon className="h-4 w-4" />
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
           <div
@@ -154,7 +157,7 @@ export default function TeacherShell() {
             className="flex cursor-not-allowed select-none items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-grey-300"
           >
             <ClipboardCheck className="h-4 w-4" />
-            <span className="min-w-0 flex-1">เช็คชื่อ</span>
+            <span className="min-w-0 flex-1">{t('attendance')}</span>
             <ComingSoonBadge />
             <Lock className="h-3.5 w-3.5 shrink-0" />
           </div>
@@ -190,7 +193,7 @@ export default function TeacherShell() {
               className="hidden items-center gap-1.5 rounded-lg border border-grey-300/70 px-2.5 py-1.5 text-xs text-grey-600 transition-colors hover:bg-canvas hover:text-ink sm:inline-flex"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              Reset demo data
+              {t('resetDemo')}
             </button>
 
             <DarkModeToggle />
@@ -201,7 +204,7 @@ export default function TeacherShell() {
             <div className="relative" ref={bellRef}>
               <button
                 type="button"
-                aria-label="การแจ้งเตือน"
+                aria-label={t('notifications')}
                 aria-expanded={openMenu === 'bell'}
                 onClick={() => setOpenMenu(openMenu === 'bell' ? null : 'bell')}
                 className="relative rounded-full p-2 text-grey-600 transition-colors hover:bg-pink-50 hover:text-pink-600"
@@ -213,7 +216,7 @@ export default function TeacherShell() {
               </button>
               {openMenu === 'bell' && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-grey-300/60 bg-paper p-2 shadow-lg">
-                  <p className="px-3 pb-1 pt-2 text-xs font-semibold text-grey-600">การแจ้งเตือน</p>
+                  <p className="px-3 pb-1 pt-2 text-xs font-semibold text-grey-600">{t('notifications')}</p>
                   {NOTIFICATIONS.map((text) => (
                     <div
                       key={text}
@@ -248,7 +251,7 @@ export default function TeacherShell() {
                     className="flex cursor-not-allowed select-none items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-grey-300"
                   >
                     <User className="h-4 w-4" />
-                    <span className="min-w-0 flex-1">โปรไฟล์</span>
+                    <span className="min-w-0 flex-1">{t('myProfile')}</span>
                     <ComingSoonBadge />
                     <Lock className="h-3.5 w-3.5 shrink-0" />
                   </div>
@@ -257,7 +260,7 @@ export default function TeacherShell() {
                     className="flex cursor-not-allowed select-none items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-grey-300"
                   >
                     <Settings className="h-4 w-4" />
-                    <span className="min-w-0 flex-1">ตั้งค่า</span>
+                    <span className="min-w-0 flex-1">{t('settings')}</span>
                     <ComingSoonBadge />
                     <Lock className="h-3.5 w-3.5 shrink-0" />
                   </div>
@@ -271,7 +274,7 @@ export default function TeacherShell() {
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-ink transition-colors hover:bg-pink-50/60"
                   >
                     <LogOut className="h-4 w-4 text-grey-600" />
-                    ออกจากระบบ
+                    {t('logout')}
                   </button>
                 </div>
               )}
@@ -337,7 +340,7 @@ export default function TeacherShell() {
 
             {/* navigation */}
             <nav className="mt-4 flex flex-1 flex-col gap-1 border-t border-grey-300/40 pt-4">
-              {NAV.map(({ to, label, icon: Icon, end }) => (
+              {NAV.map(({ to, labelKey, icon: Icon, end }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -353,7 +356,7 @@ export default function TeacherShell() {
                   }
                 >
                   <Icon className="h-4 w-4" />
-                  {label}
+                  {t(labelKey)}
                 </NavLink>
               ))}
               <div
