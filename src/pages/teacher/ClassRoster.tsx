@@ -29,15 +29,23 @@ export default function ClassRoster() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState('all')
+  const [selectedSecFilter, setSelectedSecFilter] = useState<'all' | 'sec1' | 'sec2' | 'sec3'>('all')
   const [assignmentFilter, setAssignmentFilter] = useState<'all' | 'missing' | 'complete'>('all')
 
+  const sectionOptions = [
+    { id: 'all', label: 'ทุก Sec (74 คน)' },
+    { id: 'sec1', label: 'Sec 1 (24 คน)' },
+    { id: 'sec2', label: 'Sec 2 (25 คน)' },
+    { id: 'sec3', label: 'Sec 3 (25 คน)' },
+  ]
+
   const faculties = [
-    { id: 'all', label: 'ทุกคณะ (24)' },
-    { id: 'Accounting', label: 'การบัญชี (6)' },
-    { id: 'Communication Arts', label: 'นิเทศศาสตร์ (5)' },
-    { id: 'Engineering', label: 'วิศวกรรมศาสตร์ (4)' },
-    { id: 'Business Admin', label: 'บริหารธุรกิจ (5)' },
-    { id: 'Digital Media', label: 'ดิจิทัลมีเดีย (4)' },
+    { id: 'all', label: 'ทุกคณะ (74)' },
+    { id: 'Accounting', label: 'การบัญชี (18)' },
+    { id: 'Communication Arts', label: 'นิเทศศาสตร์ (15)' },
+    { id: 'Engineering', label: 'วิศวกรรมศาสตร์ (12)' },
+    { id: 'Business Admin', label: 'บริหารธุรกิจ (15)' },
+    { id: 'Digital Media', label: 'ดิจิทัลมีเดีย (14)' },
   ]
 
   // Filter students
@@ -50,13 +58,16 @@ export default function ClassRoster() {
     const matchesFaculty =
       selectedFaculty === 'all' || s.faculty === selectedFaculty
 
+    const matchesSec =
+      selectedSecFilter === 'all' || s.sec === selectedSecFilter
+
     const hwStatus = getStudentAssignments(s.id, s.avatarSeed)
     const matchesAssignment =
       assignmentFilter === 'all' ||
       (assignmentFilter === 'missing' && !hwStatus.isComplete) ||
       (assignmentFilter === 'complete' && hwStatus.isComplete)
 
-    return matchesSearch && matchesFaculty && matchesAssignment
+    return matchesSearch && matchesFaculty && matchesSec && matchesAssignment
   })
 
   const getDevelopment = (s: Student) => {
@@ -203,9 +214,20 @@ export default function ClassRoster() {
           </button>
         </div>
 
-        {/* Faculty Select */}
+        {/* Sec & Faculty Select */}
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-grey-600" />
+          <select
+            value={selectedSecFilter}
+            onChange={(e) => setSelectedSecFilter(e.target.value as any)}
+            className="rounded-xl border border-grey-300/80 bg-canvas px-3 py-2 text-xs font-semibold text-ink outline-none focus:border-pink-500 cursor-pointer"
+          >
+            {sectionOptions.map((sec) => (
+              <option key={sec.id} value={sec.id}>
+                {sec.label}
+              </option>
+            ))}
+          </select>
           <select
             value={selectedFaculty}
             onChange={(e) => setSelectedFaculty(e.target.value)}
@@ -227,7 +249,7 @@ export default function ClassRoster() {
             <thead className="bg-canvas border-b border-grey-300/40 text-grey-600 uppercase tracking-wider font-extrabold sticky top-0 z-10 shadow-2xs">
               <tr>
                 <th className="py-3.5 px-4">นักศึกษา</th>
-                <th className="py-3.5 px-4">คณะ / ชั้นปี</th>
+                <th className="py-3.5 px-4">คณะ / Sec / ชั้นปี</th>
                 <th className="py-3.5 px-4">คะแนนสะสมรวม</th>
                 <th className="py-3.5 px-4">สถานะการส่งงาน & งานค้าง</th>
                 <th className="py-3.5 px-4">มีส่วนร่วมในคลาส</th>
@@ -259,10 +281,15 @@ export default function ClassRoster() {
                     </td>
 
                     <td className="py-3 px-4">
-                      <div className="space-y-0.5">
-                        <span className="inline-block rounded-md bg-pink-50 px-2 py-0.5 font-bold text-pink-600 border border-pink-200 text-[11px]">
-                          {s.faculty}
-                        </span>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="inline-block rounded-md bg-pink-50 px-2 py-0.5 font-bold text-pink-600 border border-pink-200 text-[11px]">
+                            {s.faculty}
+                          </span>
+                          <span className="inline-block rounded-md bg-purple-50 px-2 py-0.5 font-extrabold text-purple-700 border border-purple-200 text-[11px]">
+                            Sec {s.sec.replace('sec', '')}
+                          </span>
+                        </div>
                         <p className="text-[11px] text-grey-500">ปี {s.year}</p>
                       </div>
                     </td>

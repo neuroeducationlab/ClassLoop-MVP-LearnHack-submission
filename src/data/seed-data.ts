@@ -23,6 +23,7 @@ export type Student = {
   nickname: string
   faculty: string
   year: number
+  sec: 'sec1' | 'sec2' | 'sec3'
   avatarSeed: number
   spokeCount: number
 }
@@ -227,39 +228,85 @@ export const COURSE: Course = {
 /* --------------------------------------------------------------- students -- */
 
 export const STUDENTS: Student[] = [
-  // Accounting (6)
-  { id: 's-somchai', name: 'สมชาย', nickname: 'ชาย', faculty: 'Accounting', year: 3, avatarSeed: 12, spokeCount: 2 },
-  { id: 's-piya', name: 'ปิยะ', nickname: 'เอก', faculty: 'Accounting', year: 2, avatarSeed: 47, spokeCount: 1 },
-  { id: 's-wanna', name: 'วรรณา', nickname: 'นุ้ย', faculty: 'Accounting', year: 3, avatarSeed: 83, spokeCount: 3 },
-  { id: 's-supaporn', name: 'สุภาพร', nickname: 'แอน', faculty: 'Accounting', year: 4, avatarSeed: 29, spokeCount: 0 },
-  { id: 's-thana', name: 'ธนา', nickname: 'เก่ง', faculty: 'Accounting', year: 2, avatarSeed: 61, spokeCount: 2 },
-  { id: 's-arun', name: 'อรุณ', nickname: 'รุ่ง', faculty: 'Accounting', year: 3, avatarSeed: 95, spokeCount: 1 },
+  // --- SEC 1 (24 Students) ---
+  { id: 's-101', name: 'สมชาย', nickname: 'ชาย', faculty: 'Accounting', year: 3, sec: 'sec1', avatarSeed: 12, spokeCount: 2 },
+  { id: 's-102', name: 'ปิยะ', nickname: 'เอก', faculty: 'Accounting', year: 2, sec: 'sec1', avatarSeed: 47, spokeCount: 1 },
+  { id: 's-103', name: 'วรรณา', nickname: 'นุ้ย', faculty: 'Accounting', year: 3, sec: 'sec1', avatarSeed: 83, spokeCount: 3 },
+  { id: 's-104', name: 'สุภาพร', nickname: 'แอน', faculty: 'Accounting', year: 4, sec: 'sec1', avatarSeed: 29, spokeCount: 0 },
+  { id: 's-105', name: 'ธนา', nickname: 'เก่ง', faculty: 'Accounting', year: 2, sec: 'sec1', avatarSeed: 61, spokeCount: 2 },
+  { id: 's-106', name: 'อรุณ', nickname: 'รุ่ง', faculty: 'Accounting', year: 3, sec: 'sec1', avatarSeed: 95, spokeCount: 1 },
+  { id: 's-107', name: 'กิตติ', nickname: 'กิ๊ก', faculty: 'Communication Arts', year: 2, sec: 'sec1', avatarSeed: 8, spokeCount: 3 },
+  { id: 's-108', name: 'ปวีณา', nickname: 'ปอ', faculty: 'Communication Arts', year: 3, sec: 'sec1', avatarSeed: 54, spokeCount: 1 },
+  { id: 's-109', name: 'ชนิดา', nickname: 'ไอซ์', faculty: 'Communication Arts', year: 4, sec: 'sec1', avatarSeed: 72, spokeCount: 2 },
+  { id: 's-110', name: 'ภาณุ', nickname: 'บอส', faculty: 'Communication Arts', year: 2, sec: 'sec1', avatarSeed: 33, spokeCount: 0 },
+  { id: 's-111', name: 'สิริ', nickname: 'มิ้ม', faculty: 'Communication Arts', year: 3, sec: 'sec1', avatarSeed: 90, spokeCount: 2 },
+  { id: 's-112', name: 'ธีรวัฒน์', nickname: 'ต้น', faculty: 'Engineering', year: 4, sec: 'sec1', avatarSeed: 17, spokeCount: 3 },
+  { id: 's-113', name: 'นภา', nickname: 'แนน', faculty: 'Engineering', year: 3, sec: 'sec1', avatarSeed: 66, spokeCount: 1 },
+  { id: 's-114', name: 'วิชัย', nickname: 'เจ', faculty: 'Engineering', year: 2, sec: 'sec1', avatarSeed: 41, spokeCount: 0 },
+  { id: 's-115', name: 'อนุชา', nickname: 'บิว', faculty: 'Engineering', year: 3, sec: 'sec1', avatarSeed: 78, spokeCount: 1 },
+  { id: 's-116', name: 'พรรณี', nickname: 'พลอย', faculty: 'Business Admin', year: 2, sec: 'sec1', avatarSeed: 25, spokeCount: 2 },
+  { id: 's-117', name: 'ศักดิ์', nickname: 'ดุ๊ก', faculty: 'Business Admin', year: 3, sec: 'sec1', avatarSeed: 58, spokeCount: 1 },
+  { id: 's-118', name: 'รัตนา', nickname: 'เบล', faculty: 'Business Admin', year: 4, sec: 'sec1', avatarSeed: 86, spokeCount: 3 },
+  { id: 's-119', name: 'ธนวัฒน์', nickname: 'ไมค์', faculty: 'Business Admin', year: 2, sec: 'sec1', avatarSeed: 39, spokeCount: 0 },
+  { id: 's-120', name: 'จิราภา', nickname: 'จูน', faculty: 'Business Admin', year: 3, sec: 'sec1', avatarSeed: 70, spokeCount: 2 },
+  { id: 's-121', name: 'ณัฐ', nickname: 'นัท', faculty: 'Digital Media', year: 3, sec: 'sec1', avatarSeed: 5, spokeCount: 3 },
+  { id: 's-122', name: 'สุวิมล', nickname: 'หมิว', faculty: 'Digital Media', year: 2, sec: 'sec1', avatarSeed: 51, spokeCount: 1 },
+  { id: 's-123', name: 'ภูมิ', nickname: 'ภู', faculty: 'Digital Media', year: 4, sec: 'sec1', avatarSeed: 97, spokeCount: 2 },
+  { id: 's-124', name: 'กัญญา', nickname: 'เค', faculty: 'Digital Media', year: 3, sec: 'sec1', avatarSeed: 44, spokeCount: 1 },
 
-  // Communication Arts (5)
-  { id: 's-kitti', name: 'กิตติ', nickname: 'กิ๊ก', faculty: 'Communication Arts', year: 2, avatarSeed: 8, spokeCount: 3 },
-  { id: 's-paweena', name: 'ปวีณา', nickname: 'ปอ', faculty: 'Communication Arts', year: 3, avatarSeed: 54, spokeCount: 1 },
-  { id: 's-chanida', name: 'ชนิดา', nickname: 'ไอซ์', faculty: 'Communication Arts', year: 4, avatarSeed: 72, spokeCount: 2 },
-  { id: 's-phanu', name: 'ภาณุ', nickname: 'บอส', faculty: 'Communication Arts', year: 2, avatarSeed: 33, spokeCount: 0 },
-  { id: 's-siri', name: 'สิริ', nickname: 'มิ้ม', faculty: 'Communication Arts', year: 3, avatarSeed: 90, spokeCount: 2 },
+  // --- SEC 2 (25 Students) ---
+  { id: 's-201', name: 'ชัยวัฒน์', nickname: 'ชัย', faculty: 'Accounting', year: 2, sec: 'sec2', avatarSeed: 13, spokeCount: 2 },
+  { id: 's-202', name: 'พิมพา', nickname: 'พิม', faculty: 'Accounting', year: 3, sec: 'sec2', avatarSeed: 48, spokeCount: 1 },
+  { id: 's-203', name: 'มนัส', nickname: 'นัส', faculty: 'Accounting', year: 2, sec: 'sec2', avatarSeed: 84, spokeCount: 3 },
+  { id: 's-204', name: 'วิไล', nickname: 'ไล', faculty: 'Accounting', year: 4, sec: 'sec2', avatarSeed: 30, spokeCount: 0 },
+  { id: 's-205', name: 'สมพงษ์', nickname: 'พงษ์', faculty: 'Accounting', year: 3, sec: 'sec2', avatarSeed: 62, spokeCount: 2 },
+  { id: 's-206', name: 'กานดา', nickname: 'ดา', faculty: 'Communication Arts', year: 2, sec: 'sec2', avatarSeed: 9, spokeCount: 2 },
+  { id: 's-207', name: 'ชลธิชา', nickname: 'ชล', faculty: 'Communication Arts', year: 3, sec: 'sec2', avatarSeed: 55, spokeCount: 1 },
+  { id: 's-208', name: 'ณรงค์', nickname: 'ณรงค์', faculty: 'Communication Arts', year: 4, sec: 'sec2', avatarSeed: 73, spokeCount: 3 },
+  { id: 's-209', name: 'ดนัย', nickname: 'แดน', faculty: 'Communication Arts', year: 2, sec: 'sec2', avatarSeed: 34, spokeCount: 0 },
+  { id: 's-210', name: 'ทิพย์', nickname: 'ทิพย์', faculty: 'Communication Arts', year: 3, sec: 'sec2', avatarSeed: 91, spokeCount: 2 },
+  { id: 's-211', name: 'นิพนธ์', nickname: 'นิ', faculty: 'Engineering', year: 3, sec: 'sec2', avatarSeed: 18, spokeCount: 1 },
+  { id: 's-212', name: 'บุญมี', nickname: 'มี', faculty: 'Engineering', year: 2, sec: 'sec2', avatarSeed: 67, spokeCount: 2 },
+  { id: 's-213', name: 'ประเสริฐ', nickname: 'เสริฐ', faculty: 'Engineering', year: 4, sec: 'sec2', avatarSeed: 42, spokeCount: 0 },
+  { id: 's-214', name: 'ผดุง', nickname: 'ดุง', faculty: 'Engineering', year: 3, sec: 'sec2', avatarSeed: 79, spokeCount: 3 },
+  { id: 's-215', name: 'พรทิพย์', nickname: 'พร', faculty: 'Business Admin', year: 2, sec: 'sec2', avatarSeed: 26, spokeCount: 1 },
+  { id: 's-216', name: 'ไพโรจน์', nickname: 'โรจน์', faculty: 'Business Admin', year: 3, sec: 'sec2', avatarSeed: 59, spokeCount: 2 },
+  { id: 's-217', name: 'ภัทรา', nickname: 'ภัทร', faculty: 'Business Admin', year: 4, sec: 'sec2', avatarSeed: 87, spokeCount: 0 },
+  { id: 's-218', name: 'มานิตย์', nickname: 'นิตย์', faculty: 'Business Admin', year: 2, sec: 'sec2', avatarSeed: 40, spokeCount: 3 },
+  { id: 's-219', name: 'ยุทธนา', nickname: 'ยุทธ', faculty: 'Business Admin', year: 3, sec: 'sec2', avatarSeed: 71, spokeCount: 1 },
+  { id: 's-220', name: 'รุ่งโรจน์', nickname: 'รุ่ง', faculty: 'Digital Media', year: 3, sec: 'sec2', avatarSeed: 6, spokeCount: 2 },
+  { id: 's-221', name: 'ลัดดา', nickname: 'ลัด', faculty: 'Digital Media', year: 2, sec: 'sec2', avatarSeed: 52, spokeCount: 1 },
+  { id: 's-222', name: 'วรวิทย์', nickname: 'วิทย์', faculty: 'Digital Media', year: 4, sec: 'sec2', avatarSeed: 98, spokeCount: 0 },
+  { id: 's-223', name: 'ศิริพร', nickname: 'ศิ', faculty: 'Digital Media', year: 3, sec: 'sec2', avatarSeed: 45, spokeCount: 2 },
+  { id: 's-224', name: 'สมพร', nickname: 'พร', faculty: 'Digital Media', year: 2, sec: 'sec2', avatarSeed: 14, spokeCount: 1 },
+  { id: 's-225', name: 'สายชล', nickname: 'ชล', faculty: 'Accounting', year: 3, sec: 'sec2', avatarSeed: 49, spokeCount: 2 },
 
-  // Engineering (4)
-  { id: 's-teerawat', name: 'ธีรวัฒน์', nickname: 'ต้น', faculty: 'Engineering', year: 4, avatarSeed: 17, spokeCount: 3 },
-  { id: 's-napa', name: 'นภา', nickname: 'แนน', faculty: 'Engineering', year: 3, avatarSeed: 66, spokeCount: 1 },
-  { id: 's-wichai', name: 'วิชัย', nickname: 'เจ', faculty: 'Engineering', year: 2, avatarSeed: 41, spokeCount: 0 },
-  { id: 's-anucha', name: 'อนุชา', nickname: 'บิว', faculty: 'Engineering', year: 3, avatarSeed: 78, spokeCount: 1 },
-
-  // Business Admin (5)
-  { id: 's-pannee', name: 'พรรณี', nickname: 'พลอย', faculty: 'Business Admin', year: 2, avatarSeed: 25, spokeCount: 2 },
-  { id: 's-sak', name: 'ศักดิ์', nickname: 'ดุ๊ก', faculty: 'Business Admin', year: 3, avatarSeed: 58, spokeCount: 1 },
-  { id: 's-rattana', name: 'รัตนา', nickname: 'เบล', faculty: 'Business Admin', year: 4, avatarSeed: 86, spokeCount: 3 },
-  { id: 's-thanawat', name: 'ธนวัฒน์', nickname: 'ไมค์', faculty: 'Business Admin', year: 2, avatarSeed: 39, spokeCount: 0 },
-  { id: 's-jirapa', name: 'จิราภา', nickname: 'จูน', faculty: 'Business Admin', year: 3, avatarSeed: 70, spokeCount: 2 },
-
-  // Digital Media (4)
-  { id: 's-nat', name: 'ณัฐ', nickname: 'นัท', faculty: 'Digital Media', year: 3, avatarSeed: 5, spokeCount: 3 },
-  { id: 's-suwimon', name: 'สุวิมล', nickname: 'หมิว', faculty: 'Digital Media', year: 2, avatarSeed: 51, spokeCount: 1 },
-  { id: 's-poom', name: 'ภูมิ', nickname: 'ภู', faculty: 'Digital Media', year: 4, avatarSeed: 97, spokeCount: 2 },
-  { id: 's-kanya', name: 'กัญญา', nickname: 'เค', faculty: 'Digital Media', year: 3, avatarSeed: 44, spokeCount: 1 },
+  // --- SEC 3 (25 Students) ---
+  { id: 's-301', name: 'หทัยรัตน์', nickname: 'หทัย', faculty: 'Accounting', year: 3, sec: 'sec3', avatarSeed: 85, spokeCount: 2 },
+  { id: 's-302', name: 'อนันต์', nickname: 'นันท์', faculty: 'Accounting', year: 2, sec: 'sec3', avatarSeed: 31, spokeCount: 1 },
+  { id: 's-303', name: 'อภิชาติ', nickname: 'ชาติ', faculty: 'Accounting', year: 4, sec: 'sec3', avatarSeed: 63, spokeCount: 3 },
+  { id: 's-304', name: 'อมรา', nickname: 'อม', faculty: 'Accounting', year: 3, sec: 'sec3', avatarSeed: 10, spokeCount: 0 },
+  { id: 's-305', name: 'อารีย์', nickname: 'อารีย์', faculty: 'Accounting', year: 2, sec: 'sec3', avatarSeed: 56, spokeCount: 2 },
+  { id: 's-306', name: 'อำนาจ', nickname: 'อำ', faculty: 'Communication Arts', year: 3, sec: 'sec3', avatarSeed: 74, spokeCount: 1 },
+  { id: 's-307', name: 'อุบล', nickname: 'อุ', faculty: 'Communication Arts', year: 2, sec: 'sec3', avatarSeed: 35, spokeCount: 2 },
+  { id: 's-308', name: 'กิตติศักดิ์', nickname: 'ตี้', faculty: 'Communication Arts', year: 4, sec: 'sec3', avatarSeed: 92, spokeCount: 0 },
+  { id: 's-309', name: 'เกศรินทร์', nickname: 'เกศ', faculty: 'Communication Arts', year: 3, sec: 'sec3', avatarSeed: 19, spokeCount: 3 },
+  { id: 's-310', name: 'ขวัญชัย', nickname: 'ขวัญ', faculty: 'Communication Arts', year: 2, sec: 'sec3', avatarSeed: 68, spokeCount: 1 },
+  { id: 's-311', name: 'จรัส', nickname: 'จรัส', faculty: 'Engineering', year: 3, sec: 'sec3', avatarSeed: 43, spokeCount: 2 },
+  { id: 's-312', name: 'จินตนา', nickname: 'จิน', faculty: 'Engineering', year: 2, sec: 'sec3', avatarSeed: 80, spokeCount: 0 },
+  { id: 's-313', name: 'ฉัตรชัย', nickname: 'ฉัตร', faculty: 'Engineering', year: 4, sec: 'sec3', avatarSeed: 27, spokeCount: 3 },
+  { id: 's-314', name: 'เฉลิม', nickname: 'เหลิม', faculty: 'Engineering', year: 3, sec: 'sec3', avatarSeed: 60, spokeCount: 1 },
+  { id: 's-315', name: 'ชลิต', nickname: 'ลิต', faculty: 'Business Admin', year: 2, sec: 'sec3', avatarSeed: 88, spokeCount: 2 },
+  { id: 's-316', name: 'ดวงใจ', nickname: 'ดวง', faculty: 'Business Admin', year: 3, sec: 'sec3', avatarSeed: 41, spokeCount: 1 },
+  { id: 's-317', name: 'ถนอม', nickname: 'นอม', faculty: 'Business Admin', year: 4, sec: 'sec3', avatarSeed: 72, spokeCount: 0 },
+  { id: 's-318', name: 'ทวี', nickname: 'วี', faculty: 'Business Admin', year: 2, sec: 'sec3', avatarSeed: 7, spokeCount: 2 },
+  { id: 's-319', name: 'ธงชัย', nickname: 'ธง', faculty: 'Business Admin', year: 3, sec: 'sec3', avatarSeed: 53, spokeCount: 3 },
+  { id: 's-320', name: 'นลินี', nickname: 'นลิน', faculty: 'Digital Media', year: 2, sec: 'sec3', avatarSeed: 99, spokeCount: 1 },
+  { id: 's-321', name: 'นพดล', nickname: 'ดล', faculty: 'Digital Media', year: 3, sec: 'sec3', avatarSeed: 46, spokeCount: 2 },
+  { id: 's-322', name: 'นารี', nickname: 'รี', faculty: 'Digital Media', year: 4, sec: 'sec3', avatarSeed: 15, spokeCount: 0 },
+  { id: 's-323', name: 'บุญส่ง', nickname: 'ส่ง', faculty: 'Digital Media', year: 3, sec: 'sec3', avatarSeed: 50, spokeCount: 3 },
+  { id: 's-324', name: 'ประวิทย์', nickname: 'วิทย์', faculty: 'Digital Media', year: 2, sec: 'sec3', avatarSeed: 86, spokeCount: 1 },
+  { id: 's-325', name: 'ปรีชา', nickname: 'ชา', faculty: 'Accounting', year: 3, sec: 'sec3', avatarSeed: 32, spokeCount: 2 },
 ]
 
 /* ----------------------------------------------------------------- topics -- */

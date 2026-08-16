@@ -407,26 +407,6 @@ export default function Studio() {
               </div>
             </div>
 
-            {/* Quick Preset Pill Buttons */}
-            <div className="flex items-center gap-1.5 pt-0.5">
-              <span className="text-[11px] font-bold text-grey-500">จำนวนยอดนิยม:</span>
-              {[24, 40, 60, 100].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => setStudentCount(num)}
-                  className={cn(
-                    'rounded-xl px-2.5 py-1 text-[11px] font-extrabold transition-all border cursor-pointer',
-                    studentCount === num
-                      ? 'border-pink-500 bg-pink-600 text-white shadow-2xs'
-                      : 'border-grey-300/60 bg-canvas text-grey-600 hover:border-grey-300'
-                  )}
-                >
-                  {num} คน
-                </button>
-              ))}
-            </div>
-
             {/* Faculty Chips */}
             <div className="space-y-1.5 pt-1">
               <label className="block text-xs font-bold text-grey-600">คณะในคลาสเรียนนี้:</label>
