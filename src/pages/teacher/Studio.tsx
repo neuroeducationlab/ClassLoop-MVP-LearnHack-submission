@@ -38,8 +38,25 @@ export default function Studio() {
   const [selectedTopicId, setSelectedTopicId] = useState<string>(topics[1]?.id || 't2')
   const [selectedSec, setSelectedSec] = useState<string>('sec1')
   const [studentCount, setStudentCount] = useState<number>(24)
+  const [studentCountInput, setStudentCountInput] = useState<string>('24')
   const [fileName, setFileName] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+
+  const handleStudentCountChange = (val: string) => {
+    setStudentCountInput(val)
+    const num = parseInt(val, 10)
+    if (!isNaN(num) && num > 0) {
+      setStudentCount(num)
+    }
+  }
+
+  const handleStudentCountBlur = () => {
+    const num = parseInt(studentCountInput, 10)
+    if (isNaN(num) || num < 1) {
+      setStudentCount(24)
+      setStudentCountInput('24')
+    }
+  }
 
   const sections = [
     { id: 'sec1', name: 'Sec 1 (กลุ่ม 1: อ. 09:00 - 12:00)' },
@@ -391,18 +408,43 @@ export default function Studio() {
               {/* Exact Number Input for Student Count */}
               <div className="sm:col-span-4">
                 <label className="block text-xs font-bold text-grey-600 mb-1">จำนวนผู้เรียน (คน):</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={studentCount}
-                    onChange={(e) => setStudentCount(Math.max(1, Number(e.target.value)))}
-                    className="w-full rounded-2xl border border-grey-300/80 bg-paper px-3.5 py-2 text-sm font-black text-ink outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all shadow-2xs"
-                  />
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-extrabold text-pink-600">
-                    คน
-                  </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = Math.max(1, (studentCount || 24) - 1)
+                      setStudentCount(next)
+                      setStudentCountInput(String(next))
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-grey-300/80 bg-paper text-ink font-bold hover:bg-canvas transition-colors cursor-pointer shadow-2xs shrink-0"
+                  >
+                    -
+                  </button>
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={studentCountInput}
+                      onChange={(e) => handleStudentCountChange(e.target.value)}
+                      onBlur={handleStudentCountBlur}
+                      className="w-full rounded-2xl border border-grey-300/80 bg-paper px-3 py-2 text-sm font-black text-ink text-center outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all shadow-2xs"
+                    />
+                    <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-extrabold text-pink-600">
+                      คน
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = (studentCount || 24) + 1
+                      setStudentCount(next)
+                      setStudentCountInput(String(next))
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-grey-300/80 bg-paper text-ink font-bold hover:bg-canvas transition-colors cursor-pointer shadow-2xs shrink-0"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             </div>

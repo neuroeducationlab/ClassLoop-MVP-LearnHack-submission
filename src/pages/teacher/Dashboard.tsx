@@ -19,7 +19,6 @@ import {
   FileDown,
   FileText,
   Lightbulb,
-  PieChart as PieIcon,
   Plus,
   Sparkles,
   Trophy,
@@ -293,79 +292,7 @@ function MiniCalendar({
   )
 }
 
-/* -------------------------------------------------- MultiRingChart Component -- */
 
-function MultiRingChart({
-  submissionPct = 92,
-  participationPct = 83,
-  comprehensionPct = 63,
-  submissionCount = '68/74',
-}: {
-  submissionPct?: number
-  participationPct?: number
-  comprehensionPct?: number
-  submissionCount?: string
-}) {
-  const rings = [
-    { label: 'ส่งแล้ว', pct: submissionPct, value: submissionCount, color: '#D12E80', bg: '#FCE7F3', r: 65, strokeWidth: 9 },
-    { label: 'มีส่วนร่วม', pct: participationPct, value: `${participationPct}%`, color: '#8B5CF6', bg: '#EDE9FE', r: 50, strokeWidth: 9 },
-    { label: 'ความเข้าใจ', pct: comprehensionPct, value: `${comprehensionPct}%`, color: '#0D9488', bg: '#CCFBF1', r: 35, strokeWidth: 9 },
-  ]
-
-  return (
-    <div className="flex flex-col items-center justify-center h-full p-1">
-      <div className="relative flex items-center justify-center w-48 h-48 my-1">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
-          {rings.map((ring) => {
-            const circumference = 2 * Math.PI * ring.r
-            const offset = circumference - (ring.pct / 100) * circumference
-            return (
-              <g key={ring.label}>
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={ring.r}
-                  fill="none"
-                  stroke={ring.bg}
-                  strokeWidth={ring.strokeWidth}
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={ring.r}
-                  fill="none"
-                  stroke={ring.color}
-                  strokeWidth={ring.strokeWidth}
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  strokeLinecap="round"
-                  className="transition-all duration-1000 ease-out"
-                />
-              </g>
-            )
-          })}
-        </svg>
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-2xl font-black text-ink">{submissionPct}%</span>
-          <span className="text-[10px] font-extrabold text-pink-600 uppercase tracking-wide">ภาพรวม</span>
-        </div>
-      </div>
-
-      <div className="w-full space-y-1.5 mt-1">
-        {rings.map((ring) => (
-          <div key={ring.label} className="flex items-center justify-between rounded-xl bg-canvas px-3 py-1.5 border border-grey-300/40 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: ring.color }} />
-              <span className="font-extrabold text-ink">{ring.label}</span>
-            </div>
-            <span className="font-black" style={{ color: ring.color }}>{ring.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 /* ---------------------------------------------------------------- page ---- */
 
@@ -488,8 +415,6 @@ export default function Dashboard() {
 
   const completedStudentsCount = secStudents.length - missingStudents.length
   const submissionPct = Math.round((completedStudentsCount / secStudents.length) * 100)
-  const participationPct = 83
-  const comprehensionPct = liveAverage
 
   const remindOne = (id: string, nickname: string) => {
     setRemindedIds((prev) => new Set(prev).add(id))
@@ -757,93 +682,92 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Card B: Detailed Weekly Line Graph & MultiRing Donut */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Detailed Line Graph showing ALL Faculties */}
-            <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm md:col-span-8 space-y-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-base font-extrabold text-ink">ความเข้าใจรายสัปดาห์ (แยกทุกคณะ)</h3>
-                  <p className="text-xs text-grey-600 font-medium">เปรียบเทียบพัฒนาการ 5 คณะวิชาอย่างละเอียด</p>
-                </div>
-                {/* Faculty Toggles */}
-                <div className="flex flex-wrap gap-1">
-                  {SERIES.map((s) => (
-                    <button
-                      key={s.key}
-                      type="button"
-                      onClick={() => setVisibleSeries((prev) => ({ ...prev, [s.key]: !prev[s.key] }))}
-                      className={cn(
-                        'rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border cursor-pointer transition-all',
-                        visibleSeries[s.key] ? 'bg-paper shadow-2xs opacity-100' : 'opacity-30'
-                      )}
-                      style={{ color: s.color, borderColor: s.color }}
-                    >
-                      {s.th}
-                    </button>
-                  ))}
-                </div>
+          {/* Full-Width Detailed Weekly Line Graph */}
+          <div className="rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-grey-300/40 pb-3">
+              <div>
+                <h3 className="text-lg font-extrabold text-ink flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-pink-600" />
+                  <span>ความเข้าใจรายสัปดาห์ (พัฒนาการย้อนหลัง 6 สัปดาห์ แยกทุกคณะ)</span>
+                </h3>
+                <p className="text-xs text-grey-600 font-medium mt-0.5">
+                  แสดงเปรียบเทียบพัฒนาการสัปดาห์ที่ 1 - 6 ของทั้ง 5 คณะวิชาอย่างชัดเจน
+                </p>
               </div>
-
-              <div className="h-60 w-full pt-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weeklyData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={GREY_200} vertical={false} />
-                    <XAxis dataKey="label" stroke="#888" tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-                    <YAxis domain={[0, 100]} stroke="#888" tickLine={false} tick={{ fontSize: 10 }} />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null
-                        const d = payload[0].payload
-                        return (
-                          <div className="rounded-2xl border border-grey-300 bg-paper p-3 shadow-xl text-xs space-y-1.5 font-bold">
-                            <p className="font-extrabold text-ink border-b border-grey-200 pb-1">
-                              ส.{d.week} {d.topic}
-                            </p>
-                            {payload.map((p) => (
-                              <div key={p.name} className="flex justify-between gap-4 text-[11px]">
-                                <span style={{ color: p.color }}>{p.name}:</span>
-                                <span className="font-extrabold">{p.value}%</span>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      }}
-                    />
-                    {SERIES.map((s) =>
-                      visibleSeries[s.key] ? (
-                        <Line
-                          key={s.key}
-                          name={s.th}
-                          type="monotone"
-                          dataKey={s.key}
-                          stroke={s.color}
-                          strokeWidth={s.width}
-                          dot={{ r: 3, fill: s.color }}
-                        />
-                      ) : null
+              {/* Faculty Legend Toggles */}
+              <div className="flex flex-wrap gap-1.5">
+                {SERIES.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => setVisibleSeries((prev) => ({ ...prev, [s.key]: !prev[s.key] }))}
+                    className={cn(
+                      'rounded-full px-3 py-1 text-xs font-extrabold border cursor-pointer transition-all shadow-2xs',
+                      visibleSeries[s.key] ? 'bg-paper opacity-100 ring-1' : 'opacity-30 bg-canvas'
                     )}
-                  </LineChart>
-                </ResponsiveContainer>
+                    style={{ color: s.color, borderColor: s.color }}
+                  >
+                    {s.th}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* MultiRing Donut */}
-            <div className="rounded-3xl border border-grey-300/60 bg-paper p-5 shadow-sm md:col-span-4 flex flex-col justify-between">
-              <div>
-                <h3 className="text-base font-extrabold text-ink flex items-center gap-1.5">
-                  <PieIcon className="h-4 w-4 text-pink-600" />
-                  <span>สัดส่วนภาพรวม</span>
-                </h3>
-                <p className="text-[11px] text-grey-500 font-medium">ส่งแล้ว/มีส่วนร่วม/เข้าใจ</p>
-              </div>
-
-              <MultiRingChart
-                submissionPct={submissionPct}
-                participationPct={participationPct}
-                comprehensionPct={comprehensionPct}
-                submissionCount={`${completedStudentsCount}/${secStudents.length}`}
-              />
+            {/* High-Resolution Full-Width Graph */}
+            <div className="h-80 w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={weeklyData} margin={{ top: 15, right: 25, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={GREY_200} vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    stroke="#666"
+                    tickLine={false}
+                    tick={{ fontSize: 12, fontWeight: 800 }}
+                  />
+                  <YAxis
+                    domain={[40, 100]}
+                    stroke="#666"
+                    tickLine={false}
+                    tick={{ fontSize: 11, fontWeight: 700 }}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null
+                      const d = payload[0].payload
+                      return (
+                        <div className="rounded-2xl border border-grey-300/80 bg-paper p-3.5 shadow-xl text-xs space-y-2 font-bold">
+                          <p className="font-extrabold text-ink border-b border-grey-200 pb-1 flex items-center justify-between gap-4">
+                            <span>สัปดาห์ที่ {d.week}:</span>
+                            <span className="text-pink-600 font-extrabold">{d.topic}</span>
+                          </p>
+                          <div className="space-y-1">
+                            {payload.map((p) => (
+                              <div key={p.name} className="flex justify-between gap-6 text-[11px]">
+                                <span style={{ color: p.color }} className="font-extrabold">{p.name}:</span>
+                                <span className="font-black text-ink">{p.value}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    }}
+                  />
+                  {SERIES.map((s) =>
+                    visibleSeries[s.key] ? (
+                      <Line
+                        key={s.key}
+                        name={s.th}
+                        type="monotone"
+                        dataKey={s.key}
+                        stroke={s.color}
+                        strokeWidth={s.key === 'class' ? 4 : 3}
+                        dot={{ r: 4.5, strokeWidth: 2, fill: s.color }}
+                        activeDot={{ r: 7, strokeWidth: 0 }}
+                      />
+                    ) : null
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 

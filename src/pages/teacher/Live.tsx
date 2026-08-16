@@ -274,22 +274,22 @@ export default function Live() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left: Content Preparation */}
             <div className="rounded-2xl border border-grey-300/60 bg-paper p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-ink flex items-center gap-2">
+              <h2 className="text-base font-extrabold text-ink flex items-center gap-2">
                 <Brain className="h-5 w-5 text-pink-600" />
-                <span>การเตรียมเนื้อหาการสอน (Content Preparation)</span>
+                <span>การเตรียมเนื้อหาการสอน</span>
               </h2>
 
               <div className="space-y-3 text-xs">
                 <div className="rounded-xl bg-canvas p-3.5 border border-grey-300/40 space-y-1">
                   <p className="font-bold text-ink">มิติวัฒนธรรม 6 ด้านของ Hofstede:</p>
-                  <p className="text-grey-600 leading-relaxed">
+                  <p className="text-grey-600 leading-relaxed font-medium">
                     1. Power Distance Index (PDI) • 2. Individualism (IDV) • 3. Masculinity (MAS) • 4. Uncertainty Avoidance (UAI) • 5. Long Term Orientation (LTO) • 6. Indulgence (IND)
                   </p>
                 </div>
 
                 <div className="rounded-xl bg-pink-50 p-3.5 border border-pink-200 space-y-1">
                   <p className="font-bold text-pink-600">จุดเด่นที่เน้นในคลาสข้ามคณะ:</p>
-                  <p className="text-ink leading-relaxed">
+                  <p className="text-ink leading-relaxed font-medium">
                     เน้นเปรียบเทียบระหว่าง คณะบริหารฯ (ชอบความตรงไปตรงมา) vs คณะดิจิทัลมีเดียฯ (เน้นความคิดสร้างสรรค์แบบเปิด) เพื่อสร้างบรรยากาศแลกเปลี่ยนจริง
                   </p>
                 </div>
@@ -299,11 +299,11 @@ export default function Live() {
             {/* Right: Active Activity Details */}
             <div className="rounded-2xl border-2 border-pink-500/80 bg-paper p-6 shadow-md space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-ink flex items-center gap-2">
+                <h2 className="text-base font-extrabold text-ink flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-pink-600" />
-                  <span>กิจกรรมการเรียนรู้ที่เลือก (Active Activity)</span>
+                  <span>กิจกรรมการเรียนรู้ที่เลือก</span>
                 </h2>
-                <span className="rounded-full bg-pink-600 px-3 py-1 text-xs font-bold text-white">
+                <span className="rounded-full bg-pink-600 px-3 py-1 text-xs font-extrabold text-white shadow-2xs">
                   {activeActivity?.durationMin || 25} นาที
                 </span>
               </div>
@@ -311,7 +311,7 @@ export default function Live() {
               <div className="space-y-3 text-xs">
                 <div>
                   <h3 className="text-lg font-bold text-ink">{activeActivity?.name || 'Cultural Clash Debate'}</h3>
-                  <p className="text-grey-600 mt-1 leading-relaxed">{activeActivity?.whyItWorks}</p>
+                  <p className="text-grey-600 mt-1 leading-relaxed font-medium">{activeActivity?.whyItWorks}</p>
                 </div>
 
                 <div className="rounded-xl bg-canvas p-3 border border-grey-300/40 space-y-1">
@@ -319,7 +319,7 @@ export default function Live() {
                     <Lightbulb className="h-4 w-4 text-pink-600" />
                     <span>ทำไมกิจกรรมนี้ถึงเวิร์ก:</span>
                   </p>
-                  <p className="text-grey-600 leading-relaxed">{activeActivity?.whyItWorks}</p>
+                  <p className="text-grey-600 leading-relaxed font-medium">{activeActivity?.whyItWorks}</p>
                 </div>
 
                 {activeActivity?.materialsNeeded && (
@@ -334,22 +334,22 @@ export default function Live() {
 
           {/* SECTION 4: PREPARED MEDIA & RESOURCES */}
           <div className="rounded-2xl border border-grey-300/60 bg-paper p-6 shadow-xs space-y-4">
-            <h2 className="text-base font-bold text-ink flex items-center gap-2">
+            <h2 className="text-base font-extrabold text-ink flex items-center gap-2">
               <Layers className="h-5 w-5 text-pink-600" />
-              <span>สื่อการสอนและเครื่องมือที่เตรียมไว้ (Prepared Media & Tools)</span>
+              <span>สื่อการสอนและเครื่องมือ</span>
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Media Card 1 */}
               <div className="rounded-xl border border-grey-300/50 bg-canvas p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-pink-600">
-                  <span className="flex items-center gap-1.5">
-                    <Layers className="h-4 w-4" />
-                    <span>Flashcards สรุป 8 ใบ</span>
+                  <span className="flex items-center gap-1.5 font-extrabold">
+                    <Layers className="h-4 w-4 text-pink-600" />
+                    <span>สรุป Flashcards 8 ใบ</span>
                   </span>
-                  <span>8 การ์ด</span>
+                  <span className="text-[11px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-md font-bold">8 การ์ด</span>
                 </div>
-                <p className="text-xs text-grey-600 leading-relaxed">
+                <p className="text-xs text-grey-600 leading-relaxed font-medium">
                   การ์ด 3D พลิกอ่านสรุปมิติวัฒนธรรม พร้อมคำใบ้และตัวอย่างจริง
                 </p>
               </div>
@@ -357,13 +357,13 @@ export default function Live() {
               {/* Media Card 2 */}
               <div className="rounded-xl border border-grey-300/50 bg-canvas p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-pink-600">
-                  <span className="flex items-center gap-1.5">
-                    <FileText className="h-4 w-4" />
-                    <span>ข้อสอบลองสอบ (Pre-test)</span>
+                  <span className="flex items-center gap-1.5 font-extrabold">
+                    <FileText className="h-4 w-4 text-pink-600" />
+                    <span>แบบทดสอบ Pre-test</span>
                   </span>
-                  <span>5 ข้อ</span>
+                  <span className="text-[11px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-md font-bold">5 ข้อ</span>
                 </div>
-                <p className="text-xs text-grey-600 leading-relaxed">
+                <p className="text-xs text-grey-600 leading-relaxed font-medium">
                   โจทย์ทดสอบความเข้าใจ พร้อมข้อสังเกตและแนวคิดการวิเคราะห์
                 </p>
               </div>
@@ -371,13 +371,13 @@ export default function Live() {
               {/* Media Card 3 */}
               <div className="rounded-xl border border-grey-300/50 bg-canvas p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-pink-600">
-                  <span className="flex items-center gap-1.5">
-                    <BarChart className="h-4 w-4" />
-                    <span>Live Response Graph</span>
+                  <span className="flex items-center gap-1.5 font-extrabold">
+                    <BarChart className="h-4 w-4 text-pink-600" />
+                    <span>กราฟคำตอบเรียลไทม์</span>
                   </span>
-                  <span>Recharts Live</span>
+                  <span className="text-[11px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-md font-bold">กราฟสด</span>
                 </div>
-                <p className="text-xs text-grey-600 leading-relaxed">
+                <p className="text-xs text-grey-600 leading-relaxed font-medium">
                   กราฟแท่งสีชมพูแสดงสัดส่วนการตอบของนักศึกษาแบบเรียลไทม์
                 </p>
               </div>
@@ -388,10 +388,10 @@ export default function Live() {
               <button
                 type="button"
                 onClick={() => setStartModal(true)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-pink-600 py-3.5 px-8 text-base font-bold text-white shadow-lg shadow-pink-600/25 hover:bg-pink-600/90 active:scale-[0.98] transition-all cursor-pointer"
+                className="inline-flex items-center gap-2.5 rounded-2xl bg-pink-600 py-3.5 px-8 text-base font-black text-white shadow-lg shadow-pink-600/30 hover:bg-pink-700 active:scale-[0.98] transition-all cursor-pointer"
               >
                 <Zap className="h-5 w-5 fill-white" />
-                <span>เข้าสู่โหมดสอนเรียลไทม์ (Live Interactive Class)</span>
+                <span>เข้าสู่โหมดสอนเรียลไทม์</span>
               </button>
             </div>
           </div>
