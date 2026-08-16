@@ -72,16 +72,6 @@ export default function Studio() {
   // Selected topic metadata
   const currentTopic = topics.find((t) => t.id === selectedTopicId) || topics[1] || topics[0]
 
-  // Auto fill sample syllabus handler
-  const handleUseSampleSyllabus = () => {
-    setUsingSampleSyllabus(true)
-    setFileName('Course_Syllabus_PIBM3301.pdf')
-    setSelectedTopicId(topics[1]?.id || 't2')
-    setStudentCount(24)
-    setSelectedFaculties(allFaculties.map((f) => f.id))
-    showToast('โหลดไฟล์ตัวอย่าง Syllabus แล้ว')
-  }
-
   // Toggle faculty chip selection
   const toggleFaculty = (id: string) => {
     if (selectedFaculties.includes(id)) {
@@ -189,59 +179,115 @@ export default function Studio() {
         {/* LEFT FORM PANEL (40%) — Extremely Clean & Friendly */}
         <div className="w-full shrink-0 space-y-5 rounded-3xl border border-grey-300/60 bg-paper p-6 shadow-sm lg:w-[40%]">
           
-          {/* Section 1: Syllabus File */}
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-ink flex items-center gap-2">
-              <FileText className="h-4 w-4 text-pink-600" />
-              <span>1. เลือกไฟล์ Course Syllabus</span>
-            </label>
+          {/* Section 1: MAIN HERO CALL TO ACTION — Course Syllabus Dropzone */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-base font-extrabold text-ink flex items-center gap-2">
+                <FileText className="h-5 w-5 text-pink-600" />
+                <span>1. อัปโหลด Course Syllabus</span>
+              </label>
+              <span className="text-[11px] font-extrabold text-pink-600 bg-pink-50 dark:bg-pink-950/60 px-2.5 py-0.5 rounded-full border border-pink-200">
+                Hero CTA
+              </span>
+            </div>
 
-            {/* Prominent Sample Syllabus Button */}
-            <button
-              type="button"
-              onClick={handleUseSampleSyllabus}
-              className={cn(
-                'flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-all cursor-pointer shadow-2xs',
-                usingSampleSyllabus
-                  ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/40 text-pink-600 font-bold ring-2 ring-pink-500/20'
-                  : 'border-grey-300/80 bg-canvas text-ink hover:border-pink-300 hover:bg-pink-50/30'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-100 text-pink-600 font-bold">
-                  <FileCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-ink">ใช้ไฟล์ตัวอย่าง (PIBM3301)</p>
-                  <p className="text-xs text-grey-600">วิชาธุรกิจระหว่างประเทศข้ามคณะ</p>
-                </div>
-              </div>
-              {usingSampleSyllabus && (
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-600 text-white">
-                  <Check className="h-4 w-4" />
-                </span>
-              )}
-            </button>
-
-            {fileName && (
-              <p className="text-xs font-semibold text-pink-600 bg-pink-50 p-2 rounded-xl border border-pink-200 text-center">
-                📄 ไฟล์ที่ใช้: {fileName}
-              </p>
-            )}
-
-            {/* Custom Dropzone */}
+            {/* Prominent Hero Dropzone Box */}
             <div
               onClick={() => {
-                setFileName('Course_Syllabus_Upload.pdf')
+                setFileName('Course_Syllabus_PIBM3301.pdf')
                 setUsingSampleSyllabus(false)
-                showToast('อัปโหลดไฟล์เรียบร้อยแล้ว')
+                showToast('อัปโหลดไฟล์ Syllabus เรียบร้อยแล้ว')
               }}
-              className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-grey-300/80 p-3.5 text-center transition-all cursor-pointer hover:border-pink-400 hover:bg-pink-50/20"
+              className={cn(
+                'group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed p-6 text-center transition-all cursor-pointer shadow-sm',
+                fileName
+                  ? 'border-pink-500 bg-pink-50/50 dark:bg-pink-950/30 ring-2 ring-pink-500/20'
+                  : 'border-pink-300 bg-pink-50/20 hover:border-pink-500 hover:bg-pink-50/40'
+              )}
             >
-              <Upload className="h-4 w-4 text-grey-600" />
-              <span className="text-xs font-semibold text-grey-600">
-                หรือคลิกเพื่ออัปโหลดไฟล์ของคุณเอง (PDF/DOCX)
-              </span>
+              {fileName ? (
+                <div className="flex flex-col items-center gap-2.5 w-full">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-600 text-white shadow-md shadow-pink-600/30">
+                    <FileCheck className="h-7 w-7" />
+                  </div>
+                  <div>
+                    <span className="inline-block rounded-full bg-emerald-100 text-emerald-700 font-extrabold text-xs px-3 py-0.5 border border-emerald-300 mb-1">
+                      ✓ พร้อมประมวลผล
+                    </span>
+                    <h3 className="text-base font-extrabold text-ink">{fileName}</h3>
+                    <p className="text-xs text-grey-600 mt-0.5">
+                      สกัดวัตถุประสงค์และเนื้อหาประจำวิชาเรียบร้อยแล้ว
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-pink-600 underline pt-1 group-hover:text-pink-700">
+                    คลิกเพื่อเปลี่ยนไฟล์ใหม่
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 group-hover:scale-110 transition-transform shadow-xs">
+                    <Upload className="h-7 w-7" />
+                  </div>
+                  <div>
+                    <p className="text-base font-extrabold text-ink">
+                      ลากและวางไฟล์ Course Syllabus ที่นี่
+                    </p>
+                    <p className="text-xs text-grey-600 mt-1">
+                      หรือคลิกเพื่อเลือกไฟล์จากเครื่อง (รองรับ PDF, DOCX, TXT สูงสุด 20MB)
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Demo Sample Files Section for Quick System Testing */}
+            <div className="rounded-2xl bg-canvas p-3.5 border border-grey-300/50 space-y-2">
+              <p className="text-xs font-bold text-grey-600 flex items-center gap-1.5">
+                <span>🧪 ทดลองระบบด้วยไฟล์ตัวอย่าง:</span>
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsingSampleSyllabus(true)
+                    setFileName('Course_Syllabus_PIBM3301.pdf')
+                    setSelectedTopicId(topics[1]?.id || 't2')
+                    showToast('เลือกไฟล์ตัวอย่าง PIBM3301 (ธุรกิจข้ามชาติ)')
+                  }}
+                  className={cn(
+                    'flex items-center justify-between rounded-xl p-2.5 text-left border text-xs transition-all cursor-pointer',
+                    usingSampleSyllabus && fileName === 'Course_Syllabus_PIBM3301.pdf'
+                      ? 'border-pink-500 bg-pink-50 text-pink-600 font-bold dark:bg-pink-950/60'
+                      : 'border-grey-300/60 bg-paper text-ink hover:border-pink-300'
+                  )}
+                >
+                  <span className="truncate pr-1">วิชา PIBM3301 (ธุรกิจข้ามชาติ)</span>
+                  {usingSampleSyllabus && fileName === 'Course_Syllabus_PIBM3301.pdf' && (
+                    <Check className="h-4 w-4 shrink-0 text-pink-600" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUsingSampleSyllabus(true)
+                    setFileName('Course_Syllabus_MKT201.docx')
+                    setSelectedTopicId(topics[0]?.id || 't1')
+                    showToast('เลือกไฟล์ตัวอย่าง MKT201 (การตลาดดิจิทัล)')
+                  }}
+                  className={cn(
+                    'flex items-center justify-between rounded-xl p-2.5 text-left border text-xs transition-all cursor-pointer',
+                    usingSampleSyllabus && fileName === 'Course_Syllabus_MKT201.docx'
+                      ? 'border-pink-500 bg-pink-50 text-pink-600 font-bold dark:bg-pink-950/60'
+                      : 'border-grey-300/60 bg-paper text-ink hover:border-pink-300'
+                  )}
+                >
+                  <span className="truncate pr-1">วิชา MKT201 (การตลาดดิจิทัล)</span>
+                  {usingSampleSyllabus && fileName === 'Course_Syllabus_MKT201.docx' && (
+                    <Check className="h-4 w-4 shrink-0 text-pink-600" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -283,6 +329,18 @@ export default function Studio() {
                 <Users className="h-4 w-4 text-pink-600" />
                 <span>3. คณะผู้เรียนในห้อง ({studentCount} คน)</span>
               </label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={10}
+                max={150}
+                step={2}
+                value={studentCount}
+                onChange={(e) => setStudentCount(Number(e.target.value))}
+                className="w-full accent-pink-600 cursor-pointer"
+              />
             </div>
 
             {/* Simple Faculty Chips */}

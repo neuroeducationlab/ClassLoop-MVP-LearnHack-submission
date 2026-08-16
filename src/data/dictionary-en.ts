@@ -701,3 +701,48 @@ export const DICTIONARY_EN: Record<string, string> = {
   '✨ สร้างสื่อการสอน': '✨ Generate teaching materials',
   '⚡ ส่งเข้าคาบเรียนสด': '⚡ Send to the live class',
 }
+
+/**
+ * Patterns for strings React composes at runtime (`สัปดาห์ที่ ${n}`), which a
+ * fixed phrase table can never contain. Applied only after an exact-match miss.
+ */
+export const PATTERN_RULES: { re: RegExp; to: string }[] = [
+  { re: /^อ\.ดร\.ธนพร$/, to: 'Dr. Thanaporn' },
+  { re: /^สัปดาห์ที่\s*(\d+)$/, to: 'Week $1' },
+  { re: /^·?\s*สัปดาห์\s*(\d+)$/, to: '· Week $1' },
+  { re: /^ส\.(\d+)$/, to: 'W$1' },
+  { re: /^(\d+)\/(\d+)\s*ข้อ\s*\((\d+)%\)$/, to: '$1/$2 correct ($3%)' },
+  { re: /^(\d+)\s*ข้อ$/, to: '$1 questions' },
+  { re: /^ข้อ$/, to: 'questions' },
+  { re: /^(\d+)\s*คน$/, to: '$1 students' },
+  { re: /^คน$/, to: 'students' },
+  { re: /^ปี\s*(\d+)$/, to: 'Year $1' },
+  { re: /^·?\s*ชั้นปีที่\s*(\d+)?$/, to: '· Year $1' },
+  { re: /^ชั้นปีที่$/, to: 'Year' },
+  { re: /^(\d+)\s*ครั้ง$/, to: '$1 times' },
+  { re: /^ครั้ง$/, to: 'times' },
+  { re: /^(\d+)\s*จุด$/, to: '$1 pts' },
+  { re: /^(\d+)\s*นาที$/, to: '$1 min' },
+  { re: /^📄\s*ไฟล์ที่ใช้:$/, to: '📄 File in use:' },
+  { re: /^วิเคราะห์จากผลคะแนนของคุณ$/, to: 'Based on your scores' },
+  { re: /^ปี$/, to: 'Year' },
+  { re: /^สัปดาห์ที่$/, to: 'Week' },
+  { re: /^·?\s*สัปดาห์$/, to: '· Week' },
+  { re: /^3\. คณะผู้เรียนในห้อง \($/, to: '3. Faculties in the room (' },
+  { re: /^คน\)$/, to: ' students)' },
+  { re: /^กิจกรรมการสอน \($/, to: 'Teaching activities (' },
+  { re: /^ข้อสอบ \($/, to: 'Questions (' },
+  { re: /^กิจกรรมที่$/, to: 'Activity' },
+  { re: /^นาที$/, to: 'min' },
+  { re: /^ขั้นตอนกิจกรรม \($/, to: 'Activity steps (' },
+  { re: /^ขั้นตอน\)$/, to: ' steps)' },
+  { re: /^กระทู้พูดคุยและการโต้ตอบทั้งหมด \($/, to: 'All discussions and replies (' },
+  { re: /^กระดานพูดคุยและการโต้ตอบล่าสุด \($/, to: 'Recent discussions and replies (' },
+  { re: /^การโต้ตอบในกระทู้ \($/, to: 'Replies in this thread (' },
+  { re: /^การโต้ตอบ \($/, to: 'Replies (' },
+  { re: /^ความคิดเห็น\)$/, to: ' comments)' },
+  { re: /^สื่อที่ต้องใช้:$/, to: 'Materials needed:' },
+  { re: /^การ์ดที่$/, to: 'Card' },
+  { re: /^สำเร็จ$/, to: 'complete' },
+  { re: /^ส่งงานเรียบร้อยแล้ว \($/, to: 'Submitted (' },
+]

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useApp } from '@/context/AppContext'
-import { DICTIONARY_EN } from '@/data/dictionary-en'
+import { DICTIONARY_EN, PATTERN_RULES } from '@/data/dictionary-en'
 
 /**
  * Whole-app Thai → English layer.
@@ -31,11 +31,21 @@ const originalAttr = new WeakMap<Element, Map<string, string>>()
 
 let busy = false
 
+/** Exact phrase first, then runtime-composed patterns. */
+function lookup(text: string): string | undefined {
+  const exact = DICTIONARY_EN[text]
+  if (exact) return exact
+  for (const { re, to } of PATTERN_RULES) {
+    if (re.test(text)) return text.replace(re, to)
+  }
+  return undefined
+}
+
 function translateTextNode(node: Text) {
   const source = originalText.get(node) ?? node.nodeValue ?? ''
   if (!THAI.test(source)) return
 
-  const hit = DICTIONARY_EN[source.trim()]
+  const hit = lookup(source.trim())
   if (!hit) return
 
   if (!originalText.has(node)) originalText.set(node, source)
@@ -50,7 +60,7 @@ function translateAttrs(el: Element) {
     const source = stored ?? el.getAttribute(attr)
     if (!source || !THAI.test(source)) continue
 
-    const hit = DICTIONARY_EN[source.trim()]
+    const hit = lookup(source.trim())
     if (!hit) continue
 
     if (!stored) {
